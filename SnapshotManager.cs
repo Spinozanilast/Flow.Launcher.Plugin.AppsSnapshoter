@@ -1,8 +1,8 @@
 ﻿using System;
 using System.IO;
-using Flow.Launcher.Plugin.FolderMark.Models;
+using Flow.Launcher.Plugin.SnapshotApps.Models;
 
-namespace Flow.Launcher.Plugin.FolderMark;
+namespace Flow.Launcher.Plugin.SnapshotApps;
 
 using ProtobufSerializer = ProtoBuf.Serializer;
 

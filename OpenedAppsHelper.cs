@@ -4,9 +4,9 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
-using Flow.Launcher.Plugin.FolderMark.Models;
+using Flow.Launcher.Plugin.SnapshotApps.Models;
 
-namespace Flow.Launcher.Plugin.FolderMark;
+namespace Flow.Launcher.Plugin.SnapshotApps;
 
 public class OpenedAppsHelper
 {

@@ -1,6 +1,6 @@
 ﻿using ProtoBuf;
 
-namespace Flow.Launcher.Plugin.FolderMark.Models;
+namespace Flow.Launcher.Plugin.SnapshotApps.Models;
 
 [ProtoContract]
 public class AppModel

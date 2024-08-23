@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Flow.Launcher.Plugin.FolderMark
+namespace Flow.Launcher.Plugin.SnapshotApps
 {
     /// <summary>
     /// 
     /// </summary>
-    public class FolderMark : IAsyncPlugin
+    public class SnapshotApps : IAsyncPlugin
     {
         private PluginInitContext _context;
         private OpenedAppsHelper _openedAppsHelper;

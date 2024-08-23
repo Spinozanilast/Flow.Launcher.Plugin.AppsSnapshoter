@@ -1,11 +1,11 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net7.0-windows</TargetFramework>
-    <PackageId>Flow.Launcher.Plugin.FolderMark</PackageId>
+    <PackageId>Flow.Launcher.Plugin.SnapshotApps</PackageId>
     <Authors>spinozanilast</Authors>
-    <PackageProjectUrl>https://github.com/spinozanilast/Flow.Launcher.Plugin.FolderMark</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/spinozanilast/Flow.Launcher.Plugin.FolderMark</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/spinozanilast/Flow.Launcher.Plugin.SnapshotApps</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/spinozanilast/Flow.Launcher.Plugin.SnapshotApps</RepositoryUrl>
     <PackageTags>flow-launcher flow-plugin</PackageTags>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
@@ -18,7 +18,7 @@
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-    <OutputPath>C:\Users\Vadim\AppData\Roaming\FlowLauncher\Plugins\Flow.Launcher.Plugin.FolderMark</OutputPath>
+    <OutputPath>C:\Users\Vadim\AppData\Roaming\FlowLauncher\Plugins\Flow.Launcher.Plugin.SnapshotApps</OutputPath>
   </PropertyGroup>
 
   <ItemGroup>

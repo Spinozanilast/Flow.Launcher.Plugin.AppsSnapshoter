@@ -8,6 +8,7 @@
 *.suo
 *.user
 *.ps1
+*.sln
 .vs/
 [Bb]in/
 [Oo]bj/
