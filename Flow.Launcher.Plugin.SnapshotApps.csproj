@@ -1,36 +1,45 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net7.0-windows</TargetFramework>
-    <PackageId>Flow.Launcher.Plugin.SnapshotApps</PackageId>
-    <Authors>spinozanilast</Authors>
-    <PackageProjectUrl>https://github.com/spinozanilast/Flow.Launcher.Plugin.SnapshotApps</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/spinozanilast/Flow.Launcher.Plugin.SnapshotApps</RepositoryUrl>
-    <PackageTags>flow-launcher flow-plugin</PackageTags>
-    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
-    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
-  </PropertyGroup>
+    <PropertyGroup>
+        <TargetFramework>net7.0-windows</TargetFramework>
+        <PackageId>Flow.Launcher.Plugin.SnapshotApps</PackageId>
+        <Authors>spinozanilast</Authors>
+        <PackageProjectUrl>https://github.com/spinozanilast/Flow.Launcher.Plugin.SnapshotApps</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/spinozanilast/Flow.Launcher.Plugin.SnapshotApps</RepositoryUrl>
+        <PackageTags>flow-launcher flow-plugin</PackageTags>
+        <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+        <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DebugSymbols>false</DebugSymbols>
-    <DebugType>None</DebugType>
-  </PropertyGroup>
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+        <DebugSymbols>false</DebugSymbols>
+        <DebugType>None</DebugType>
+    </PropertyGroup>
 
-  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-    <OutputPath>C:\Users\Vadim\AppData\Roaming\FlowLauncher\Plugins\Flow.Launcher.Plugin.SnapshotApps</OutputPath>
-  </PropertyGroup>
+    <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+        <OutputPath>C:\Users\Vadim\AppData\Roaming\FlowLauncher\Plugins\Flow.Launcher.Plugin.SnapshotApps</OutputPath>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <Content Include="plugin.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
+    <ItemGroup>
+        <Content Include="plugin.json">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+    </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Flow.Launcher.Plugin" Version="4.1.0" />
-    <PackageReference Include="protobuf-net" Version="3.2.30" />
-    <PackageReference Include="System.Drawing.Common" Version="8.0.8" />
-  </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Flow.Launcher.Plugin" Version="4.1.0"/>
+        <PackageReference Include="protobuf-net" Version="3.2.30"/>
+        <PackageReference Include="System.Drawing.Common" Version="8.0.8"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Content Include="ActionsImages\**">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="icon.png">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+    </ItemGroup>
 
 </Project>

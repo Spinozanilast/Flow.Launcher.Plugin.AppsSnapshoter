@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using Flow.Launcher.Plugin.SnapshotApps.Models;
 
 namespace Flow.Launcher.Plugin.SnapshotApps;
@@ -11,20 +13,66 @@ public class SnapshotManager
     private const string DefaultSnapshotsDirectoryName = "Snapshots";
     private const string DefaultSerializedFileExtension = ".bin";
 
-
-    private readonly string _pluginDirectory;
     private readonly string _snapshotsDirectory;
 
     public SnapshotManager(string pluginDirectory)
     {
-        _pluginDirectory = _pluginDirectory ?? pluginDirectory;
-        _snapshotsDirectory = Path.Combine(_pluginDirectory, DefaultSnapshotsDirectoryName);
+        _snapshotsDirectory = Path.Combine(pluginDirectory, DefaultSnapshotsDirectoryName);
 
         if (!Directory.Exists(_snapshotsDirectory))
         {
             Directory.CreateDirectory(_snapshotsDirectory);
         }
     }
+
+    public bool IsAnySnapshotExists()
+    {
+        return Directory.GetFiles(_snapshotsDirectory).Length > 0;
+    }
+
+    public bool IsSnapshotExists(string snapshotName)
+    {
+        return GetSnapshotsNames().Contains(snapshotName);
+    }
+
+    public string[] GetSnapshotsNames()
+    {
+        var snapshotFiles = Directory.GetFiles(_snapshotsDirectory);
+
+        var snapshotsNames = new string[snapshotFiles.Length];
+
+        for (int i = 0; i < snapshotsNames.Length; i++)
+        {
+            snapshotsNames[i] = Path.GetFileName(snapshotFiles[i])[..^(DefaultSnapshotsDirectoryName.Length)];
+        }
+
+        return snapshotsNames;
+    }
+
+    public void OpenSnapshotApps(string snapshotName)
+    {
+        if (!IsSnapshotExists(snapshotName))
+        {
+            throw new NullReferenceException("There is no such snapshot to open apps.");
+        }
+
+        var snapshot = GetSnapshot(snapshotName);
+        foreach (var appModel in snapshot.AppModelsIncluded)
+        {
+            Process.Start(appModel.ExecutionFilePath);
+        }
+    }
+
+    public void RemoveSnapshot(string snapshotName)
+    {
+        var snapshotFileName = GetSnapshotFileName(snapshotName);
+
+        if (File.Exists(snapshotFileName))
+        {
+            DeleteFileWithSnapshot(snapshotName);
+        }
+    }
+
 
     public void CreateSnapshot(Snapshot newSnapshot)
     {
@@ -36,16 +84,6 @@ public class SnapshotManager
     {
         var fileStream = CreateFileForSnapshot(snapshotName);
         return SnapshotFormatter.DeserializeSnapshot(fileStream);
-    }
-
-    public void RemoveSnapshot(string snapshotName)
-    {
-        var snapshotFileName = GetSnapshotFileName(snapshotName);
-
-        if (File.Exists(snapshotFileName))
-        {
-            DeleteFileWithSnapshot(snapshotName);
-        }
     }
 
     private FileStream OpenExistingFileWithSnapshot(string snapshotName)
@@ -68,8 +106,8 @@ public class SnapshotManager
     private void DeleteFileWithSnapshot(string snapshotName) =>
         File.Delete(GetSnapshotFileName(snapshotName));
 
-    public string GetSnapshotFileName(string snapshotName) =>
-        Path.Combine(_pluginDirectory, snapshotName) + DefaultSerializedFileExtension;
+    private string GetSnapshotFileName(string snapshotName) =>
+        Path.Combine(_snapshotsDirectory, snapshotName) + DefaultSerializedFileExtension;
 }
 
 public class SnapshotFormatter
