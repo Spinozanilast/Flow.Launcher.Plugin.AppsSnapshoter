@@ -43,10 +43,24 @@ public class SnapshotManager
 
         for (int i = 0; i < snapshotsNames.Length; i++)
         {
-            snapshotsNames[i] = Path.GetFileName(snapshotFiles[i])[..^(DefaultSnapshotsDirectoryName.Length)];
+            snapshotsNames[i] = Path.GetFileName(snapshotFiles[i])[..^(DefaultSerializedFileExtension.Length)];
         }
 
         return snapshotsNames;
+    }
+
+    public Snapshot[] GetSnapshots()
+    {
+        var snapshotFiles = Directory.GetFiles(_snapshotsDirectory);
+        var snapshots = new Snapshot[snapshotFiles.Length];
+
+        for (int i = 0; i < snapshots.Length; i++)
+        {
+            snapshots[i] = GetSnapshot(
+                Path.GetFileName(snapshotFiles[i])[..^(DefaultSerializedFileExtension.Length)]);
+        }
+
+        return snapshots;
     }
 
     public void OpenSnapshotApps(string snapshotName)
@@ -59,7 +73,15 @@ public class SnapshotManager
         var snapshot = GetSnapshot(snapshotName);
         foreach (var appModel in snapshot.AppModelsIncluded)
         {
-            Process.Start(appModel.ExecutionFilePath);
+            var exePath = appModel.ExecutionFilePath;
+            if (File.Exists(exePath))
+            { 
+                Process.Start(exePath);
+            }
+            else
+            {
+                throw new Exception("Execution file of app written if file does not exists.");
+            }
         }
     }
 
@@ -82,7 +104,7 @@ public class SnapshotManager
 
     public Snapshot GetSnapshot(string snapshotName)
     {
-        var fileStream = CreateFileForSnapshot(snapshotName);
+        var fileStream = OpenExistingFileWithSnapshot(snapshotName);
         return SnapshotFormatter.DeserializeSnapshot(fileStream);
     }
 

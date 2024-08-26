@@ -17,6 +17,7 @@ namespace Flow.Launcher.Plugin.SnapshotApps
         private SnapshotManager _snapshotManager;
 
         private const string PluginIconPath = "/icon.png";
+        private const string SnapshotStandardIconPath = "snapshot.png";
 
         private Dictionary<string, Func<string, List<Result>>> _listAfterResults =
             new(StringComparer.InvariantCultureIgnoreCase);
@@ -37,11 +38,15 @@ namespace Flow.Launcher.Plugin.SnapshotApps
         {
             var results = new List<Result>();
 
+            if (query.FirstSearch.ToLower() == "list")
+            {
+                return GetSnaphotsList();
+            }
+
             var createResult = CreateSingleResult(
                 $"Create {query.FirstSearch} Snapshot",
                 $"Save locally currently active apps for later for subsequent launch",
-                "ActionsImages/add-item-icon.png",
-                c =>
+                "ActionsImages/add-icon.png", c =>
                 {
                     if (string.IsNullOrEmpty(query.FirstSearch))
                     {
@@ -62,14 +67,14 @@ namespace Flow.Launcher.Plugin.SnapshotApps
                 {
                     try
                     {
-                        GetSnaphotsList();
+                        _context.API.ChangeQuery("sa list");
                     }
                     catch (Exception ex)
                     {
                         _context.API.ShowMsg("There are no snapshots located.", "Create Snapshots");
                     }
 
-                    return true;
+                    return false;
                 }
             );
 
@@ -115,7 +120,7 @@ namespace Flow.Launcher.Plugin.SnapshotApps
             return results;
         }
 
-        private List<Result> GetSnaphotsList() => _snapshotManager.GetSnapshotsNames().ToResults();
+        private List<Result> GetSnaphotsList() => _snapshotManager.GetSnapshots().ToResults();
 
 
         private bool ShowMsg(string msgTitle, string msgSubtitle, string icoPath = PluginIconPath,
@@ -128,15 +133,13 @@ namespace Flow.Launcher.Plugin.SnapshotApps
 
         private async Task CreateAppsSnapshot(string snapshotName, CancellationToken cancellationToken)
         {
-            if (string.IsNullOrEmpty(snapshotName))
-            {
-            }
-
             var appModels = await GetCurrentlyOpenApps(cancellationToken);
+            var snapshotIcon = appModels[0].IconPath ?? SnapshotStandardIconPath;
             var snapshot = new Snapshot
             {
                 SnapshotName = snapshotName,
-                AppModelsIncluded = appModels
+                AppModelsIncluded = appModels,
+                IcoPath = snapshotIcon
             };
             _snapshotManager.CreateSnapshot(snapshot);
         }
