@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Flow.Launcher.Plugin.SnapshotApps.Models;
 
@@ -6,7 +7,7 @@ namespace Flow.Launcher.Plugin.SnapshotApps;
 
 public static class ModelsToResultsExtensions
 {
-    public static List<Result> ToResults(this Snapshot[] snapshots)
+    public static List<Result> ToResults(this Snapshot[] snapshots, Func<string, Result[]> listResultAction)
     {
         return snapshots.Select(snapshot =>
         {
@@ -17,7 +18,12 @@ public static class ModelsToResultsExtensions
                 SubTitle = apps,
                 SubTitleToolTip = string.Join(", ",
                     snapshot.AppModelsIncluded.Select(model => model.AppModuleName).ToList()),
-                IcoPath = snapshot.IcoPath
+                IcoPath = snapshot.IcoPath,
+                Action = context =>
+                {
+                    listResultAction.Invoke(snapshot.SnapshotName);
+                    return false;
+                }
             };
         }).ToList();
     }

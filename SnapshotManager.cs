@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -35,7 +36,7 @@ public class SnapshotManager
         return GetSnapshotsNames().Contains(snapshotName);
     }
 
-    public string[] GetSnapshotsNames()
+    private string[] GetSnapshotsNames()
     {
         var snapshotFiles = Directory.GetFiles(_snapshotsDirectory);
 
@@ -43,7 +44,7 @@ public class SnapshotManager
 
         for (int i = 0; i < snapshotsNames.Length; i++)
         {
-            snapshotsNames[i] = Path.GetFileName(snapshotFiles[i])[..^(DefaultSerializedFileExtension.Length)];
+            snapshotsNames[i] = Path.GetFileName(snapshotFiles[i])[..^DefaultSerializedFileExtension.Length];
         }
 
         return snapshotsNames;
@@ -75,7 +76,7 @@ public class SnapshotManager
         {
             var exePath = appModel.ExecutionFilePath;
             if (File.Exists(exePath))
-            { 
+            {
                 Process.Start(exePath);
             }
             else
@@ -95,10 +96,15 @@ public class SnapshotManager
         }
     }
 
-
     public void CreateSnapshot(Snapshot newSnapshot)
     {
-        var fileStream = CreateFileForSnapshot(newSnapshot.SnapshotName);
+        var newSnapshotName = newSnapshot.SnapshotName;
+        if (IsSnapshotExists(newSnapshotName))
+        {
+            throw new Exception($"Snapshot with same name ({newSnapshotName}) already exists ");
+        }
+
+        var fileStream = CreateFileForSnapshot(newSnapshotName);
         SnapshotFormatter.SerializeSnapshot(fileStream, newSnapshot);
     }
 
