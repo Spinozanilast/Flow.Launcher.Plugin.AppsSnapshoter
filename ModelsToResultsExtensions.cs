@@ -7,7 +7,9 @@ namespace Flow.Launcher.Plugin.SnapshotApps;
 
 public static class ModelsToResultsExtensions
 {
-    public static List<Result> ToResults(this Snapshot[] snapshots, Func<string, Result[]> listResultAction)
+    private static readonly bool IsFromList = true;
+
+    public static List<Result> ToResults(this List<Snapshot> snapshots, Func<string, bool, List<Result>> listResultAction)
     {
         return snapshots.Select(snapshot =>
         {
@@ -19,9 +21,9 @@ public static class ModelsToResultsExtensions
                 SubTitleToolTip = string.Join(", ",
                     snapshot.AppModelsIncluded.Select(model => model.AppModuleName).ToList()),
                 IcoPath = snapshot.IcoPath,
-                Action = context =>
+                Action = _ =>
                 {
-                    listResultAction.Invoke(snapshot.SnapshotName);
+                    listResultAction.Invoke(snapshot.SnapshotName, IsFromList);
                     return false;
                 }
             };

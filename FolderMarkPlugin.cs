@@ -33,16 +33,22 @@ namespace Flow.Launcher.Plugin.SnapshotApps
         public async Task<List<Result>> QueryAsync(Query query, CancellationToken cancellationToken)
         {
             var results = new List<Result>();
+            var queryFirstSearch = query.FirstSearch;
 
-            if (query.FirstSearch.ToLower() == "list")
+            if (queryFirstSearch.ToLower() == "list")
             {
                 return GetSnaphotsList();
             }
 
-            var createResult = GetCreateSnapshotResult(query, cancellationToken);
+            if (_snapshotManager.IsSnapshotExists(queryFirstSearch))
+            {
+                return GetSingleSnapshotResults(queryFirstSearch, false);
+            }
+
+            var createResult = GetCreateSnapshotResult(queryFirstSearch, cancellationToken);
             var listResult = GetListSnapshotsResult();
-            var removeSnapshotResult = GetRemoveSnapshotResult(query);
-            var openSnapshotResult = GetOpenSnapshotResult(query);
+            var removeSnapshotResult = GetRemoveSnapshotResult(queryFirstSearch);
+            var openSnapshotResult = GetOpenSnapshotResult(queryFirstSearch);
 
             results.Add(createResult);
 
@@ -56,29 +62,6 @@ namespace Flow.Launcher.Plugin.SnapshotApps
             return results;
         }
 
-        private Result GetOpenSnapshotResult(Query query)
-        {
-            return CreateSingleResult(
-                $"Open Snapshot",
-                "Open apps stored is snapshot",
-                "ActionsImages/open-icon.png",
-                c =>
-                {
-                    try
-                    {
-                        _snapshotManager.OpenSnapshotApps(query.FirstSearch);
-                    }
-                    catch (Exception e)
-                    {
-                        _context.API.ShowMsg("No such snapshot", $"There is no snapshot with name {query.FirstSearch}");
-                        return false;
-                    }
-
-                    return true;
-                }
-            );
-        }
-
         private Result GetOpenSnapshotResult(string selectedSnapshotName)
         {
             return CreateSingleResult(
@@ -87,26 +70,20 @@ namespace Flow.Launcher.Plugin.SnapshotApps
                 "ActionsImages/open-icon.png",
                 c =>
                 {
-                    _snapshotManager.OpenSnapshotApps(selectedSnapshotName);
+                    try
+                    {
+                        _snapshotManager.OpenSnapshotApps(selectedSnapshotName);
+                    }
+                    catch (Exception)
+                    {
+                        return ShowMsg("No such snapshot", $"There is no snapshot with name {selectedSnapshotName}");
+                    }
+
                     return true;
                 }
             );
         }
 
-        private Result GetRemoveSnapshotResult(Query query)
-        {
-            return CreateSingleResult(
-                $"Remove Snapshot",
-                "Remove selected Snapshot",
-                "ActionsImages/remove-icon.png",
-                c =>
-                {
-                    var snapshotName = query.FirstSearch;
-                    _snapshotManager.RemoveSnapshot(snapshotName);
-                    return false;
-                }
-            );
-        }
 
         private Result GetRemoveSnapshotResult(string selectedSnapshotName)
         {
@@ -117,7 +94,7 @@ namespace Flow.Launcher.Plugin.SnapshotApps
                 c =>
                 {
                     _snapshotManager.RemoveSnapshot(selectedSnapshotName);
-                    return false;
+                    return true;
                 }
             );
         }
@@ -134,7 +111,7 @@ namespace Flow.Launcher.Plugin.SnapshotApps
                     {
                         _context.API.ChangeQuery(_pluginKeyWord + " list");
                     }
-                    catch (Exception ex)
+                    catch (Exception)
                     {
                         _context.API.ShowMsg("There are no snapshots located.", "Create Snapshots");
                     }
@@ -144,27 +121,20 @@ namespace Flow.Launcher.Plugin.SnapshotApps
             );
         }
 
-        private Result GetCreateSnapshotResult(Query query, CancellationToken cancellationToken)
+        private Result GetCreateSnapshotResult(string queryFirstSearch, CancellationToken cancellationToken)
         {
             return CreateSingleResult(
-                $"Create Snapshot",
+                $"Create {queryFirstSearch} Snapshot",
                 $"Save locally currently active apps for later for subsequent launch",
-                "ActionsImages/add-icon.png", c =>
+                "ActionsImages/add-icon.png",
+                c =>
                 {
-                    if (string.IsNullOrEmpty(query.FirstSearch))
+                    if (string.IsNullOrEmpty(queryFirstSearch))
                     {
-                        return ShowMsg("Snapshot name", "Snapshot Name was not written");
+                        return ShowMsg("Snapshot name", "Snapshot name was not written");
                     }
 
-                    try
-                    {
-                        _ = CreateAppsSnapshot(query.FirstSearch, cancellationToken);
-                    }
-                    catch (Exception e)
-                    {
-                        ShowMsg("There is the snapshot with same name", e.Message);
-                        return false;
-                    }
+                    _ = CreateAppsSnapshot(queryFirstSearch, cancellationToken);
 
                     return true;
                 }
@@ -173,10 +143,10 @@ namespace Flow.Launcher.Plugin.SnapshotApps
 
         private List<Result> GetSnaphotsList() => _snapshotManager.GetSnapshots().ToResults(GetSingleSnapshotResults);
 
-        private Result[] GetSingleSnapshotResults(string selectedSnapshotName)
+        private List<Result> GetSingleSnapshotResults(string selectedSnapshotName, bool fromList = true)
         {
             _context.API.ChangeQuery($"{_pluginKeyWord} {selectedSnapshotName}");
-            return new Result[]
+            return new()
             {
                 GetRemoveSnapshotResult(selectedSnapshotName),
                 GetOpenSnapshotResult(selectedSnapshotName)
@@ -193,16 +163,25 @@ namespace Flow.Launcher.Plugin.SnapshotApps
 
         private async Task CreateAppsSnapshot(string snapshotName, CancellationToken cancellationToken)
         {
-            var appModels = await GetCurrentlyOpenApps(cancellationToken);
-            var snapshotIcon = appModels[0].IconPath ?? SnapshotStandardIconPath;
-            var snapshot = new Snapshot
+            try
             {
-                SnapshotName = snapshotName,
-                AppModelsIncluded = appModels,
-                IcoPath = snapshotIcon
-            };
-            _snapshotManager.CreateSnapshot(snapshot);
+                var openedApps = await GetCurrentlyOpenApps(cancellationToken);
+                var snapshotIcon = openedApps[0].IconPath ?? SnapshotStandardIconPath;
+                var snapshot = new Snapshot
+                {
+                    SnapshotName = snapshotName,
+                    AppModelsIncluded = openedApps,
+                    IcoPath = snapshotIcon
+                };
+
+                _snapshotManager.CreateSnapshot(snapshot);
+            }
+            catch (Exception e)
+            {
+                ShowMsg("Creating Snapshot Error", e.Message);
+            }
         }
+
 
         private async Task<List<AppModel>> GetCurrentlyOpenApps(CancellationToken cancellationToken)
         {

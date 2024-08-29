@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using Flow.Launcher.Plugin.SnapshotApps.Models;
 
 namespace Flow.Launcher.Plugin.SnapshotApps;
@@ -15,6 +14,7 @@ public class SnapshotManager
     private const string DefaultSerializedFileExtension = ".bin";
 
     private readonly string _snapshotsDirectory;
+    private readonly List<string> _snapshotNames;
 
     public SnapshotManager(string pluginDirectory)
     {
@@ -24,6 +24,8 @@ public class SnapshotManager
         {
             Directory.CreateDirectory(_snapshotsDirectory);
         }
+
+        _snapshotNames = new List<string>(GetSnapshotsNames());
     }
 
     public bool IsAnySnapshotExists()
@@ -33,32 +35,18 @@ public class SnapshotManager
 
     public bool IsSnapshotExists(string snapshotName)
     {
-        return GetSnapshotsNames().Contains(snapshotName);
+        return _snapshotNames.Contains(snapshotName);
     }
 
-    private string[] GetSnapshotsNames()
+    public List<Snapshot> GetSnapshots()
     {
         var snapshotFiles = Directory.GetFiles(_snapshotsDirectory);
+        var snapshots = new List<Snapshot>(_snapshotNames.Count);
 
-        var snapshotsNames = new string[snapshotFiles.Length];
-
-        for (int i = 0; i < snapshotsNames.Length; i++)
+        foreach (var snapshotFile in snapshotFiles)
         {
-            snapshotsNames[i] = Path.GetFileName(snapshotFiles[i])[..^DefaultSerializedFileExtension.Length];
-        }
-
-        return snapshotsNames;
-    }
-
-    public Snapshot[] GetSnapshots()
-    {
-        var snapshotFiles = Directory.GetFiles(_snapshotsDirectory);
-        var snapshots = new Snapshot[snapshotFiles.Length];
-
-        for (int i = 0; i < snapshots.Length; i++)
-        {
-            snapshots[i] = GetSnapshot(
-                Path.GetFileName(snapshotFiles[i])[..^(DefaultSerializedFileExtension.Length)]);
+            snapshots.Add(GetSnapshot(
+                Path.GetFileName(snapshotFile)[..^(DefaultSerializedFileExtension.Length)]));
         }
 
         return snapshots;
@@ -88,22 +76,23 @@ public class SnapshotManager
 
     public void RemoveSnapshot(string snapshotName)
     {
-        var snapshotFileName = GetSnapshotFileName(snapshotName);
-
-        if (File.Exists(snapshotFileName))
+        if (IsSnapshotExists(snapshotName))
         {
             DeleteFileWithSnapshot(snapshotName);
+            _snapshotNames.Remove(snapshotName);
         }
     }
 
     public void CreateSnapshot(Snapshot newSnapshot)
     {
         var newSnapshotName = newSnapshot.SnapshotName;
+        
         if (IsSnapshotExists(newSnapshotName))
         {
             throw new Exception($"Snapshot with same name ({newSnapshotName}) already exists ");
         }
 
+        _snapshotNames.Add(newSnapshotName);
         var fileStream = CreateFileForSnapshot(newSnapshotName);
         SnapshotFormatter.SerializeSnapshot(fileStream, newSnapshot);
     }
@@ -126,6 +115,20 @@ public class SnapshotManager
         }
 
         return File.OpenRead(snapshotFileName);
+    }
+
+    private string[] GetSnapshotsNames()
+    {
+        var snapshotFiles = Directory.GetFiles(_snapshotsDirectory);
+
+        var snapshotsNames = new string[snapshotFiles.Length];
+
+        for (int i = 0; i < snapshotsNames.Length; i++)
+        {
+            snapshotsNames[i] = Path.GetFileName(snapshotFiles[i])[..^DefaultSerializedFileExtension.Length];
+        }
+
+        return snapshotsNames;
     }
 
     private FileStream CreateFileForSnapshot(string newSnapshotName) =>
