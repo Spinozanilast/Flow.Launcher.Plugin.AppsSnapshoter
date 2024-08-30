@@ -86,7 +86,7 @@ public class SnapshotManager
     public void CreateSnapshot(Snapshot newSnapshot)
     {
         var newSnapshotName = newSnapshot.SnapshotName;
-        
+
         if (IsSnapshotExists(newSnapshotName))
         {
             throw new Exception($"Snapshot with same name ({newSnapshotName}) already exists ");
@@ -95,6 +95,22 @@ public class SnapshotManager
         _snapshotNames.Add(newSnapshotName);
         var fileStream = CreateFileForSnapshot(newSnapshotName);
         SnapshotFormatter.SerializeSnapshot(fileStream, newSnapshot);
+    }
+
+    public void RenameSnapshot(string currentSnapshotName, string futureSnapshotName)
+    {
+        if (IsSnapshotExists(futureSnapshotName))
+        {
+            throw new Exception("The snapshot with new snapshot name is exists");
+        }
+
+        var snapshot = GetSnapshot(currentSnapshotName);
+        snapshot.SnapshotName = futureSnapshotName;
+        DeleteFileWithSnapshot(currentSnapshotName);
+        CreateSnapshot(snapshot);
+
+        _snapshotNames.Remove(currentSnapshotName);
+        _snapshotNames.Add(futureSnapshotName);
     }
 
     public Snapshot GetSnapshot(string snapshotName)
@@ -136,6 +152,9 @@ public class SnapshotManager
 
     private void DeleteFileWithSnapshot(string snapshotName) =>
         File.Delete(GetSnapshotFileName(snapshotName));
+
+    private void RenameSnapshotFile(string oldSnapshotName, string newSnapshotName) =>
+        File.Move(GetSnapshotFileName(oldSnapshotName), GetSnapshotFileName(newSnapshotName));
 
     private string GetSnapshotFileName(string snapshotName) =>
         Path.Combine(_snapshotsDirectory, snapshotName) + DefaultSerializedFileExtension;

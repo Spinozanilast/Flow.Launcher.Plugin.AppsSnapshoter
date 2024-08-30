@@ -13,6 +13,7 @@ namespace Flow.Launcher.Plugin.SnapshotApps
     {
         private string _pluginDirectory;
         private string _pluginKeyWord;
+
         private PluginInitContext _context;
         private OpenedAppsHelper _openedAppsHelper;
         private SnapshotManager _snapshotManager;
@@ -94,6 +95,7 @@ namespace Flow.Launcher.Plugin.SnapshotApps
                 c =>
                 {
                     _snapshotManager.RemoveSnapshot(selectedSnapshotName);
+                    ResetSearchToActionWord();
                     return true;
                 }
             );
@@ -141,7 +143,34 @@ namespace Flow.Launcher.Plugin.SnapshotApps
             );
         }
 
-        private List<Result> GetSnaphotsList() => _snapshotManager.GetSnapshots().ToResults(GetSingleSnapshotResults);
+        private Result GetRenameSnapshotResult(string currentSnapshotName, string futureSnapshotName)
+        {
+            return CreateSingleResult(
+                $"Rename {currentSnapshotName} to {futureSnapshotName}",
+                string.Empty,
+                "ActionsImages/add-icon.png",
+                c =>
+                {
+                    if (string.IsNullOrEmpty(currentSnapshotName) || string.IsNullOrEmpty(futureSnapshotName))
+                    {
+                        return ShowMsg("There is no current snapshot name or future snapshot name", string.Empty);
+                    }
+
+                    try
+                    {
+                        _snapshotManager.RenameSnapshot(currentSnapshotName, futureSnapshotName);
+                    }
+                    catch (Exception e)
+                    {
+                        return ShowMsg("Renaming Snapshot", e.Message);
+                    }
+                    
+                    ResetSearchToActionWord();
+                    return true;
+                }
+            );
+        }
+
 
         private List<Result> GetSingleSnapshotResults(string selectedSnapshotName, bool fromList = true)
         {
@@ -151,14 +180,6 @@ namespace Flow.Launcher.Plugin.SnapshotApps
                 GetRemoveSnapshotResult(selectedSnapshotName),
                 GetOpenSnapshotResult(selectedSnapshotName)
             };
-        }
-
-        private bool ShowMsg(string msgTitle, string msgSubtitle, string icoPath = PluginIconPath,
-            bool isClosingAfterMsg = false)
-        {
-            _context.API.ShowMsg(msgTitle,
-                msgSubtitle, icoPath);
-            return isClosingAfterMsg;
         }
 
         private async Task CreateAppsSnapshot(string snapshotName, CancellationToken cancellationToken)
@@ -205,5 +226,17 @@ namespace Flow.Launcher.Plugin.SnapshotApps
                 Action = action
             };
         }
+
+        private bool ShowMsg(string msgTitle, string msgSubtitle, string icoPath = PluginIconPath,
+            bool isClosingAfterMsg = false)
+        {
+            _context.API.ShowMsg(msgTitle,
+                msgSubtitle, icoPath);
+            return isClosingAfterMsg;
+        }
+
+        private List<Result> GetSnaphotsList() => _snapshotManager.GetSnapshots().ToResults(GetSingleSnapshotResults);
+
+        private void ResetSearchToActionWord() => _context.API.ChangeQuery(_pluginKeyWord);
     }
 }
