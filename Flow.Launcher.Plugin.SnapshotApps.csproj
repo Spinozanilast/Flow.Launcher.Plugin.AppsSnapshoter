@@ -26,7 +26,7 @@
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </Content>
         <Content Update="snapshot.png">
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
     </ItemGroup>
 
@@ -37,7 +37,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <Content Include="ActionsImages\**">
+        <Content Include="ActionsIcons\**">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
         <Content Include="icon.png">

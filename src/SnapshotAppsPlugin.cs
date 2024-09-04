@@ -68,7 +68,7 @@ namespace Flow.Launcher.Plugin.SnapshotApps
             return CreateSingleResult(
                 $"Open {selectedSnapshotName} Snapshot",
                 "",
-                "ActionsImages/open-icon.png",
+                "ActionsIcons/open-icon.png",
                 c =>
                 {
                     try
@@ -91,7 +91,7 @@ namespace Flow.Launcher.Plugin.SnapshotApps
             return CreateSingleResult(
                 $"Remove {selectedSnapshotName} Snapshot",
                 "",
-                "ActionsImages/remove-icon.png",
+                "ActionsIcons/remove-icon.png",
                 c =>
                 {
                     _snapshotManager.RemoveSnapshot(selectedSnapshotName);
@@ -106,7 +106,7 @@ namespace Flow.Launcher.Plugin.SnapshotApps
             return CreateSingleResult(
                 "List Snapshot",
                 "List existing locally snapshots",
-                "ActionsImages/list-icon.png",
+                "ActionsIcons/list-icon.png",
                 c =>
                 {
                     try
@@ -128,7 +128,7 @@ namespace Flow.Launcher.Plugin.SnapshotApps
             return CreateSingleResult(
                 $"Create {queryFirstSearch} Snapshot",
                 $"Save locally currently active apps for later for subsequent launch",
-                "ActionsImages/add-icon.png",
+                "ActionsIcons/add-icon.png",
                 c =>
                 {
                     if (string.IsNullOrEmpty(queryFirstSearch))
@@ -148,7 +148,7 @@ namespace Flow.Launcher.Plugin.SnapshotApps
             return CreateSingleResult(
                 $"Rename {currentSnapshotName} to {futureSnapshotName}",
                 string.Empty,
-                "ActionsImages/add-icon.png",
+                "ActionsIcons/add-icon.png",
                 c =>
                 {
                     if (string.IsNullOrEmpty(currentSnapshotName) || string.IsNullOrEmpty(futureSnapshotName))
@@ -164,7 +164,7 @@ namespace Flow.Launcher.Plugin.SnapshotApps
                     {
                         return ShowMsg("Renaming Snapshot", e.Message);
                     }
-                    
+
                     ResetSearchToActionWord();
                     return true;
                 }

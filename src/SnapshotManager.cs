@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using Flow.Launcher.Plugin.SnapshotApps.Models;
+using Flow.Launcher.Plugin.SnapshotApps.Services;
 
 namespace Flow.Launcher.Plugin.SnapshotApps;
 
@@ -13,24 +14,19 @@ public class SnapshotManager
     private const string DefaultSnapshotsDirectoryName = "Snapshots";
     private const string DefaultSerializedFileExtension = ".bin";
 
-    private readonly string _snapshotsDirectory;
     private readonly List<string> _snapshotNames;
+    private readonly FileService _fileService;
 
     public SnapshotManager(string pluginDirectory)
     {
-        _snapshotsDirectory = Path.Combine(pluginDirectory, DefaultSnapshotsDirectoryName);
-
-        if (!Directory.Exists(_snapshotsDirectory))
-        {
-            Directory.CreateDirectory(_snapshotsDirectory);
-        }
-
+        _fileService = new FileService(baseDirectory: pluginDirectory, partToCombine: DefaultSnapshotsDirectoryName,
+            defaultFileExtension: DefaultSerializedFileExtension);
         _snapshotNames = new List<string>(GetSnapshotsNames());
     }
 
     public bool IsAnySnapshotExists()
     {
-        return Directory.GetFiles(_snapshotsDirectory).Length > 0;
+        return _fileService.IsAnyFileInsideDirectory();
     }
 
     public bool IsSnapshotExists(string snapshotName)
@@ -40,13 +36,13 @@ public class SnapshotManager
 
     public List<Snapshot> GetSnapshots()
     {
-        var snapshotFiles = Directory.GetFiles(_snapshotsDirectory);
+        var snapshotFiles = _fileService.GetFiles();
         var snapshots = new List<Snapshot>(_snapshotNames.Count);
 
         foreach (var snapshotFile in snapshotFiles)
         {
             snapshots.Add(GetSnapshot(
-                Path.GetFileName(snapshotFile)[..^(DefaultSerializedFileExtension.Length)]));
+                _fileService.GetFileNameWithoutExtension(snapshotFile)));
         }
 
         return snapshots;
@@ -119,45 +115,19 @@ public class SnapshotManager
         return SnapshotFormatter.DeserializeSnapshot(fileStream);
     }
 
-    private FileStream OpenExistingFileWithSnapshot(string snapshotName)
-    {
-        var snapshotFileName = GetSnapshotFileName(snapshotName);
+    private string[] GetSnapshotsNames() => _fileService.GetFileNames();
 
-        if (!File.Exists(snapshotFileName))
-        {
-            throw new ArgumentException(
-                "Snapshot file with selected snapshot name doesnt exists. Something went wrong!",
-                nameof(snapshotFileName));
-        }
-
-        return File.OpenRead(snapshotFileName);
-    }
-
-    private string[] GetSnapshotsNames()
-    {
-        var snapshotFiles = Directory.GetFiles(_snapshotsDirectory);
-
-        var snapshotsNames = new string[snapshotFiles.Length];
-
-        for (int i = 0; i < snapshotsNames.Length; i++)
-        {
-            snapshotsNames[i] = Path.GetFileName(snapshotFiles[i])[..^DefaultSerializedFileExtension.Length];
-        }
-
-        return snapshotsNames;
-    }
+    private FileStream OpenExistingFileWithSnapshot(string snapshotName) =>
+        _fileService.OpenReadExistingFile(snapshotName);
 
     private FileStream CreateFileForSnapshot(string newSnapshotName) =>
-        File.Create(GetSnapshotFileName(newSnapshotName));
+        _fileService.CreateFile(newSnapshotName);
 
     private void DeleteFileWithSnapshot(string snapshotName) =>
-        File.Delete(GetSnapshotFileName(snapshotName));
+        _fileService.DeleteFile(snapshotName);
 
     private void RenameSnapshotFile(string oldSnapshotName, string newSnapshotName) =>
-        File.Move(GetSnapshotFileName(oldSnapshotName), GetSnapshotFileName(newSnapshotName));
-
-    private string GetSnapshotFileName(string snapshotName) =>
-        Path.Combine(_snapshotsDirectory, snapshotName) + DefaultSerializedFileExtension;
+        _fileService.RenameFile(oldSnapshotName, newSnapshotName);
 }
 
 public class SnapshotFormatter

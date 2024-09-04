@@ -49,3 +49,8 @@ i.e. many standard Microsoft applications.
 
 * Select Rename result with written Snapshot name and also _New name_
 * Select Rename result on Snapshot from List Result and write new _Snapshot name_
+
+## TO DO
+
+* Individual app settings flow _(same operations as for snapshots(renaming, adding, deleting, changing executable path)_
+
