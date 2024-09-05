@@ -58,7 +58,7 @@ namespace Flow.Launcher.Plugin.SnapshotApps.Services
         /// <returns>True if any files exist; otherwise, false.</returns>
         public bool IsAnyFileInsideDirectory()
         {
-            return Directory.EnumerateDirectories(_combinedPath).Any();
+            return Directory.EnumerateFiles(_combinedPath).Any();
         }
 
         /// <summary>

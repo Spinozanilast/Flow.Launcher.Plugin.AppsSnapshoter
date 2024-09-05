@@ -9,7 +9,8 @@ public static class ModelsToResultsExtensions
 {
     private static readonly bool IsFromList = true;
 
-    public static List<Result> ToResults(this List<Snapshot> snapshots, Func<string, bool, List<Result>> listResultAction)
+    public static List<Result> ToResults(this List<Snapshot> snapshots,
+        Func<string, string, bool, List<Result>> listResultAction)
     {
         return snapshots.Select(snapshot =>
         {
@@ -23,7 +24,7 @@ public static class ModelsToResultsExtensions
                 IcoPath = snapshot.IcoPath,
                 Action = _ =>
                 {
-                    listResultAction.Invoke(snapshot.SnapshotName, IsFromList);
+                    listResultAction.Invoke(snapshot.SnapshotName, string.Empty, IsFromList);
                     return false;
                 }
             };

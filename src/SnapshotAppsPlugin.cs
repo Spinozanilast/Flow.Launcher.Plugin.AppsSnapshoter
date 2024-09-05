@@ -35,6 +35,7 @@ namespace Flow.Launcher.Plugin.SnapshotApps
         {
             var results = new List<Result>();
             var queryFirstSearch = query.FirstSearch;
+            var querySecondSearch = query.SecondSearch;
 
             if (queryFirstSearch.ToLower() == "list")
             {
@@ -43,13 +44,14 @@ namespace Flow.Launcher.Plugin.SnapshotApps
 
             if (_snapshotManager.IsSnapshotExists(queryFirstSearch))
             {
-                return GetSingleSnapshotResults(queryFirstSearch, false);
+                return GetSingleSnapshotResults(queryFirstSearch, querySecondSearch, false);
             }
 
             var createResult = GetCreateSnapshotResult(queryFirstSearch, cancellationToken);
             var listResult = GetListSnapshotsResult();
             var removeSnapshotResult = GetRemoveSnapshotResult(queryFirstSearch);
             var openSnapshotResult = GetOpenSnapshotResult(queryFirstSearch);
+            var renameSnapshotResult = GetRenameSnapshotResult(queryFirstSearch, querySecondSearch);
 
             results.Add(createResult);
 
@@ -58,6 +60,7 @@ namespace Flow.Launcher.Plugin.SnapshotApps
                 results.Add(openSnapshotResult);
                 results.Add(listResult);
                 results.Add(removeSnapshotResult);
+                results.Add(renameSnapshotResult);
             }
 
             return results;
@@ -66,8 +69,8 @@ namespace Flow.Launcher.Plugin.SnapshotApps
         private Result GetOpenSnapshotResult(string selectedSnapshotName)
         {
             return CreateSingleResult(
-                $"Open {selectedSnapshotName} Snapshot",
-                "",
+                "Open Snapshot",
+                $"Open {selectedSnapshotName} snapshot",
                 "ActionsIcons/open-icon.png",
                 c =>
                 {
@@ -89,8 +92,8 @@ namespace Flow.Launcher.Plugin.SnapshotApps
         private Result GetRemoveSnapshotResult(string selectedSnapshotName)
         {
             return CreateSingleResult(
-                $"Remove {selectedSnapshotName} Snapshot",
-                "",
+                "Remove Snapshot",
+                $"Remove {selectedSnapshotName} snapshot",
                 "ActionsIcons/remove-icon.png",
                 c =>
                 {
@@ -146,8 +149,8 @@ namespace Flow.Launcher.Plugin.SnapshotApps
         private Result GetRenameSnapshotResult(string currentSnapshotName, string futureSnapshotName)
         {
             return CreateSingleResult(
-                $"Rename {currentSnapshotName} to {futureSnapshotName}",
-                string.Empty,
+                "Rename Snapshot",
+                $"Rename snapshot wi {currentSnapshotName} to {futureSnapshotName}",
                 "ActionsIcons/add-icon.png",
                 c =>
                 {
@@ -172,14 +175,19 @@ namespace Flow.Launcher.Plugin.SnapshotApps
         }
 
 
-        private List<Result> GetSingleSnapshotResults(string selectedSnapshotName, bool fromList = true)
+        private List<Result> GetSingleSnapshotResults(string selectedSnapshotName, string newSnapshotName = "",
+            bool fromList = true)
         {
             _context.API.ChangeQuery($"{_pluginKeyWord} {selectedSnapshotName}");
-            return new()
+
+            var results = new List<Result>
             {
                 GetRemoveSnapshotResult(selectedSnapshotName),
-                GetOpenSnapshotResult(selectedSnapshotName)
+                GetOpenSnapshotResult(selectedSnapshotName),
+                GetRenameSnapshotResult(selectedSnapshotName, newSnapshotName)
             };
+
+            return results;
         }
 
         private async Task CreateAppsSnapshot(string snapshotName, CancellationToken cancellationToken)
