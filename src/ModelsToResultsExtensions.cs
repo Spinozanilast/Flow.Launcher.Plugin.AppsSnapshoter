@@ -7,10 +7,10 @@ namespace Flow.Launcher.Plugin.SnapshotApps;
 
 public static class ModelsToResultsExtensions
 {
-    private static readonly bool IsFromList = true;
-
+    private const bool IsFromList = true;
+    
     public static List<Result> ToResults(this List<Snapshot> snapshots,
-        Func<string, string, bool, List<Result>> listResultAction)
+        Func<string, bool, string, List<Result>> listResultAction)
     {
         return snapshots.Select(snapshot =>
         {
@@ -24,7 +24,7 @@ public static class ModelsToResultsExtensions
                 IcoPath = snapshot.IcoPath,
                 Action = _ =>
                 {
-                    listResultAction.Invoke(snapshot.SnapshotName, string.Empty, IsFromList);
+                    listResultAction.Invoke(snapshot.SnapshotName, IsFromList, string.Empty);
                     return false;
                 }
             };

@@ -7,8 +7,6 @@ using Flow.Launcher.Plugin.SnapshotApps.Services;
 
 namespace Flow.Launcher.Plugin.SnapshotApps;
 
-using ProtobufSerializer = ProtoBuf.Serializer;
-
 public class SnapshotManager
 {
     private const string DefaultSnapshotsDirectoryName = "Snapshots";
@@ -90,7 +88,7 @@ public class SnapshotManager
 
         _snapshotNames.Add(newSnapshotName);
         var fileStream = CreateFileForSnapshot(newSnapshotName);
-        SnapshotFormatter.SerializeSnapshot(fileStream, newSnapshot);
+        SnapshotBinaryFormatter.SerializeSnapshot(fileStream, newSnapshot);
     }
 
     public void RenameSnapshot(string currentSnapshotName, string futureSnapshotName)
@@ -112,7 +110,7 @@ public class SnapshotManager
     public Snapshot GetSnapshot(string snapshotName)
     {
         var fileStream = OpenExistingFileWithSnapshot(snapshotName);
-        return SnapshotFormatter.DeserializeSnapshot(fileStream);
+        return SnapshotBinaryFormatter.DeserializeSnapshot(fileStream);
     }
 
     private string[] GetSnapshotsNames() => _fileService.GetFileNames();
@@ -128,32 +126,4 @@ public class SnapshotManager
 
     private void RenameSnapshotFile(string oldSnapshotName, string newSnapshotName) =>
         _fileService.RenameFile(oldSnapshotName, newSnapshotName);
-}
-
-public class SnapshotFormatter
-{
-    public static void SerializeSnapshot(FileStream stream, Snapshot snapshot)
-    {
-        using (stream)
-        {
-            ProtobufSerializer.Serialize(stream, snapshot);
-        }
-    }
-
-    public static Snapshot DeserializeSnapshot(FileStream stream)
-    {
-        Snapshot snapshot;
-        using (stream)
-        {
-            snapshot = ProtobufSerializer.Deserialize<Snapshot>(stream);
-        }
-
-        if (snapshot is null)
-        {
-            throw new NullReferenceException(
-                "Snapshot file was empty or not correct format.");
-        }
-
-        return snapshot;
-    }
 }

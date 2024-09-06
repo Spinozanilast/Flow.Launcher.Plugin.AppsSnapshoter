@@ -44,7 +44,7 @@ namespace Flow.Launcher.Plugin.SnapshotApps
 
             if (_snapshotManager.IsSnapshotExists(queryFirstSearch))
             {
-                return GetSingleSnapshotResults(queryFirstSearch, querySecondSearch, false);
+                return GetSingleSnapshotResults(queryFirstSearch, false, querySecondSearch);
             }
 
             var createResult = GetCreateSnapshotResult(queryFirstSearch, cancellationToken);
@@ -150,35 +150,40 @@ namespace Flow.Launcher.Plugin.SnapshotApps
         {
             return CreateSingleResult(
                 "Rename Snapshot",
-                $"Rename snapshot wi {currentSnapshotName} to {futureSnapshotName}",
-                "ActionsIcons/add-icon.png",
+                $"Rename {currentSnapshotName} snapshot to {futureSnapshotName}",
+                "ActionsIcons/rename-icon.png",
                 c =>
                 {
                     if (string.IsNullOrEmpty(currentSnapshotName) || string.IsNullOrEmpty(futureSnapshotName))
                     {
-                        return ShowMsg("There is no current snapshot name or future snapshot name", string.Empty);
+                        return ShowMsg("There is no current snapshot  name or future snapshot name", string.Empty);
                     }
+
+                    _context.API.ChangeQuery($"{_pluginKeyWord} {currentSnapshotName} to {futureSnapshotName}");
 
                     try
                     {
                         _snapshotManager.RenameSnapshot(currentSnapshotName, futureSnapshotName);
+                        ResetSearchToActionWord();
                     }
                     catch (Exception e)
                     {
                         return ShowMsg("Renaming Snapshot", e.Message);
                     }
 
-                    ResetSearchToActionWord();
                     return true;
                 }
             );
         }
 
 
-        private List<Result> GetSingleSnapshotResults(string selectedSnapshotName, string newSnapshotName = "",
-            bool fromList = true)
+        private List<Result> GetSingleSnapshotResults(string selectedSnapshotName, bool isFromList,
+            string newSnapshotName = " ")
         {
-            _context.API.ChangeQuery($"{_pluginKeyWord} {selectedSnapshotName}");
+            if (isFromList)
+            {
+                _context.API.ChangeQuery($"{_pluginKeyWord} {selectedSnapshotName}");
+            }
 
             var results = new List<Result>
             {
