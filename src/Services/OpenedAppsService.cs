@@ -8,7 +8,7 @@ using Flow.Launcher.Plugin.SnapshotApps.Models;
 
 namespace Flow.Launcher.Plugin.SnapshotApps;
 
-public class OpenedAppsHelper
+public class OpenedAppsService
 {
     private const int DefaultModelsCapacity = 5;
     private const string DefaultIconsDirectoryName = "Icons";
@@ -23,7 +23,7 @@ public class OpenedAppsHelper
     private readonly string _pluginDirectory;
     private readonly string _iconsDirectory;
 
-    public OpenedAppsHelper(string pluginDirectory)
+    public OpenedAppsService(string pluginDirectory)
     {
         _pluginDirectory = pluginDirectory ?? Directory.GetCurrentDirectory();
         _iconsDirectory = Path.Combine(_pluginDirectory, DefaultIconsDirectoryName);

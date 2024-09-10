@@ -2,24 +2,23 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Flow.Launcher.Plugin.SnapshotApps.Extensions;
 using Flow.Launcher.Plugin.SnapshotApps.Models;
 
 namespace Flow.Launcher.Plugin.SnapshotApps
 {
-    /// <summary>
-    /// 
-    /// </summary>
     public class SnapshotApps : IAsyncPlugin
     {
         private string _pluginDirectory;
         private string _pluginKeyWord;
 
         private PluginInitContext _context;
-        private OpenedAppsHelper _openedAppsHelper;
+        private OpenedAppsService _openedAppsService;
         private SnapshotManager _snapshotManager;
 
         private const string PluginIconPath = "/icon.png";
         private const string SnapshotStandardIconPath = "snapshot.png";
+        private const string ListSnapshotsKeyword = "list";
 
         public Task InitAsync(PluginInitContext context)
         {
@@ -37,7 +36,7 @@ namespace Flow.Launcher.Plugin.SnapshotApps
             var queryFirstSearch = query.FirstSearch;
             var querySecondSearch = query.SecondSearch;
 
-            if (queryFirstSearch.ToLower() == "list")
+            if (queryFirstSearch.ToLower() == ListSnapshotsKeyword)
             {
                 return GetSnaphotsList();
             }
@@ -68,11 +67,11 @@ namespace Flow.Launcher.Plugin.SnapshotApps
 
         private Result GetOpenSnapshotResult(string selectedSnapshotName)
         {
-            return CreateSingleResult(
-                "Open Snapshot",
-                $"Open {selectedSnapshotName} snapshot",
-                "ActionsIcons/open-icon.png",
-                c =>
+            return new Result()
+                .WithTitle("Open Snapshot")
+                .WithSubtitle($"Open {selectedSnapshotName} snapshot")
+                .WithIconPath("ActionsIcons/open-icon.png")
+                .WithFuncReturningBoolAction(c =>
                 {
                     try
                     {
@@ -84,96 +83,99 @@ namespace Flow.Launcher.Plugin.SnapshotApps
                     }
 
                     return true;
-                }
-            );
+                });
         }
 
 
         private Result GetRemoveSnapshotResult(string selectedSnapshotName)
         {
-            return CreateSingleResult(
-                "Remove Snapshot",
-                $"Remove {selectedSnapshotName} snapshot",
-                "ActionsIcons/remove-icon.png",
-                c =>
-                {
-                    _snapshotManager.RemoveSnapshot(selectedSnapshotName);
-                    ResetSearchToActionWord();
-                    return true;
-                }
-            );
+            return new Result()
+                .WithTitle("Remove Snapshot")
+                .WithSubtitle($"Remove {selectedSnapshotName} snapshot")
+                .WithIconPath("ActionsIcons/remove-icon.png")
+                .WithFuncReturningBoolAction(
+                    c =>
+                    {
+                        _snapshotManager.RemoveSnapshot(selectedSnapshotName);
+                        ResetSearchToActionWord();
+                        return true;
+                    }
+                );
         }
 
         private Result GetListSnapshotsResult()
         {
-            return CreateSingleResult(
-                "List Snapshot",
-                "List existing locally snapshots",
-                "ActionsIcons/list-icon.png",
-                c =>
-                {
-                    try
+            return new Result()
+                .WithTitle("List Snapshot")
+                .WithSubtitle("List existing locally snapshots")
+                .WithIconPath("ActionsIcons/list-icon.png")
+                .WithFuncReturningBoolAction(
+                    c =>
                     {
-                        _context.API.ChangeQuery(_pluginKeyWord + " list");
-                    }
-                    catch (Exception)
-                    {
-                        _context.API.ShowMsg("There are no snapshots located.", "Create Snapshots");
-                    }
+                        try
+                        {
+                            _context.API.ChangeQuery(_pluginKeyWord + " list");
+                        }
+                        catch (Exception)
+                        {
+                            _context.API.ShowMsg("There are no snapshots located.", "Create Snapshots");
+                        }
 
-                    return false;
-                }
-            );
+                        return false;
+                    }
+                );
         }
 
         private Result GetCreateSnapshotResult(string queryFirstSearch, CancellationToken cancellationToken)
         {
-            return CreateSingleResult(
-                $"Create {queryFirstSearch} Snapshot",
-                $"Save locally currently active apps for later for subsequent launch",
-                "ActionsIcons/add-icon.png",
-                c =>
-                {
-                    if (string.IsNullOrEmpty(queryFirstSearch))
+            return new Result()
+                .WithTitle($"Create {queryFirstSearch} Snapshot")
+                .WithSubtitle($"Save locally currently active apps for later for subsequent launch")
+                .WithIconPath(
+                    "ActionsIcons/add-icon.png").WithFuncReturningBoolAction(
+                    c =>
                     {
-                        return ShowMsg("Snapshot name", "Snapshot name was not written");
+                        if (string.IsNullOrEmpty(queryFirstSearch))
+                        {
+                            return ShowMsg("Snapshot name", "Snapshot name was not written");
+                        }
+
+                        _ = CreateAppsSnapshot(queryFirstSearch, cancellationToken);
+
+                        return true;
                     }
-
-                    _ = CreateAppsSnapshot(queryFirstSearch, cancellationToken);
-
-                    return true;
-                }
-            );
+                );
         }
 
         private Result GetRenameSnapshotResult(string currentSnapshotName, string futureSnapshotName)
         {
-            return CreateSingleResult(
-                "Rename Snapshot",
-                $"Rename {currentSnapshotName} snapshot to {futureSnapshotName}",
-                "ActionsIcons/rename-icon.png",
-                c =>
-                {
-                    if (string.IsNullOrEmpty(currentSnapshotName) || string.IsNullOrEmpty(futureSnapshotName))
+            return new Result()
+                .WithTitle("Rename Snapshot")
+                .WithSubtitle($"Rename {currentSnapshotName} snapshot to {futureSnapshotName}")
+                .WithIconPath("ActionsIcons/rename-icon.png")
+                .WithFuncReturningBoolAction(
+                    c =>
                     {
-                        return ShowMsg("There is no current snapshot  name or future snapshot name", string.Empty);
-                    }
+                        if (string.IsNullOrEmpty(currentSnapshotName) || string.IsNullOrEmpty(futureSnapshotName))
+                        {
+                            return ShowMsg("There is no current snapshot  name or future snapshot name", string.Empty);
+                        }
 
-                    _context.API.ChangeQuery($"{_pluginKeyWord} {currentSnapshotName} to {futureSnapshotName}");
+                        _context.API.ChangeQuery($"{_pluginKeyWord} {currentSnapshotName} to {futureSnapshotName}");
 
-                    try
-                    {
-                        _snapshotManager.RenameSnapshot(currentSnapshotName, futureSnapshotName);
-                        ResetSearchToActionWord();
-                    }
-                    catch (Exception e)
-                    {
-                        return ShowMsg("Renaming Snapshot", e.Message);
-                    }
+                        try
+                        {
+                            _snapshotManager.RenameSnapshot(currentSnapshotName, futureSnapshotName);
+                            ResetSearchToActionWord();
+                        }
+                        catch (Exception e)
+                        {
+                            return ShowMsg("Renaming Snapshot", e.Message);
+                        }
 
-                    return true;
-                }
-            );
+                        return true;
+                    }
+                );
         }
 
 
@@ -219,25 +221,11 @@ namespace Flow.Launcher.Plugin.SnapshotApps
 
         private async Task<List<AppModel>> GetCurrentlyOpenApps(CancellationToken cancellationToken)
         {
-            _openedAppsHelper = new OpenedAppsHelper(_pluginDirectory);
+            _openedAppsService = new OpenedAppsService(_pluginDirectory);
 
-            await Task.Run(() => _openedAppsHelper.WriteAppsIconsToModels(), cancellationToken);
+            await Task.Run(() => _openedAppsService.WriteAppsIconsToModels(), cancellationToken);
 
-            return _openedAppsHelper.AppModels;
-        }
-
-        private Result CreateSingleResult(string title,
-            string subtitle = "",
-            string icoPath = PluginIconPath,
-            Func<ActionContext, bool> action = default)
-        {
-            return new Result
-            {
-                Title = title,
-                SubTitle = subtitle,
-                IcoPath = icoPath,
-                Action = action
-            };
+            return _openedAppsService.AppModels;
         }
 
         private bool ShowMsg(string msgTitle, string msgSubtitle, string icoPath = PluginIconPath,

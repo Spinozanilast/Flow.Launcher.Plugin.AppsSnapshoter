@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Flow.Launcher.Plugin.SnapshotApps.Models;
 
-namespace Flow.Launcher.Plugin.SnapshotApps;
+namespace Flow.Launcher.Plugin.SnapshotApps.Extensions;
 
 public static class ModelsToResultsExtensions
 {
