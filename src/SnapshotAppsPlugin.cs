@@ -86,7 +86,6 @@ namespace Flow.Launcher.Plugin.SnapshotApps
                 });
         }
 
-
         private Result GetRemoveSnapshotResult(string selectedSnapshotName)
         {
             return new Result()
@@ -106,8 +105,7 @@ namespace Flow.Launcher.Plugin.SnapshotApps
         private Result GetListSnapshotsResult()
         {
             return new Result()
-                .WithTitle("List Snapshot")
-                .WithSubtitle("List existing locally snapshots")
+                .WithTitle("List Snapshots")
                 .WithIconPath("ActionsIcons/list-icon.png")
                 .WithFuncReturningBoolAction(
                     c =>
@@ -140,7 +138,7 @@ namespace Flow.Launcher.Plugin.SnapshotApps
                             return ShowMsg("Snapshot name", "Snapshot name was not written");
                         }
 
-                        _ = CreateAppsSnapshot(queryFirstSearch, cancellationToken);
+                        _ = CreateAppsSnapshotAsync(queryFirstSearch, cancellationToken);
 
                         return true;
                     }
@@ -178,7 +176,6 @@ namespace Flow.Launcher.Plugin.SnapshotApps
                 );
         }
 
-
         private List<Result> GetSingleSnapshotResults(string selectedSnapshotName, bool isFromList,
             string newSnapshotName = " ")
         {
@@ -197,11 +194,11 @@ namespace Flow.Launcher.Plugin.SnapshotApps
             return results;
         }
 
-        private async Task CreateAppsSnapshot(string snapshotName, CancellationToken cancellationToken)
+        private async Task CreateAppsSnapshotAsync(string snapshotName, CancellationToken cancellationToken)
         {
             try
             {
-                var openedApps = await GetCurrentlyOpenApps(cancellationToken);
+                var openedApps = await GetCurrentlyOpenAppsAsync(cancellationToken);
                 var snapshotIcon = openedApps[0].IconPath ?? SnapshotStandardIconPath;
                 var snapshot = new Snapshot
                 {
@@ -218,8 +215,7 @@ namespace Flow.Launcher.Plugin.SnapshotApps
             }
         }
 
-
-        private async Task<List<AppModel>> GetCurrentlyOpenApps(CancellationToken cancellationToken)
+        private async Task<List<AppModel>> GetCurrentlyOpenAppsAsync(CancellationToken cancellationToken)
         {
             _openedAppsService = new OpenedAppsService(_pluginDirectory);
 
