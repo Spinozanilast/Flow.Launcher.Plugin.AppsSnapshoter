@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Flow.Launcher.Plugin.SnapshotApps.Extensions;
 using Flow.Launcher.Plugin.SnapshotApps.Models;
+using Flow.Launcher.Plugin.SnapshotApps.Services;
 
 namespace Flow.Launcher.Plugin.SnapshotApps
 {

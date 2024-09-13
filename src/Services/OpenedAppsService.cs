@@ -4,9 +4,11 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
+using Flow.Launcher.Plugin.SnapshotApps.HandlesViewers;
 using Flow.Launcher.Plugin.SnapshotApps.Models;
 
-namespace Flow.Launcher.Plugin.SnapshotApps;
+namespace Flow.Launcher.Plugin.SnapshotApps.Services;
 
 public class OpenedAppsService
 {
@@ -14,7 +16,7 @@ public class OpenedAppsService
     private const string DefaultIconsDirectoryName = "Icons";
     private const string DefaultIconsImagesExtension = ".png";
 
-    private readonly string[] ExcludedFullPathDirectories =
+    private readonly string[] _excludedFullPathDirectories =
     {
         "C:\\WINDOWS\\SystemApps",
         "C:\\WINDOWS\\system32",
@@ -23,17 +25,20 @@ public class OpenedAppsService
     private readonly string _pluginDirectory;
     private readonly string _iconsDirectory;
 
+    private readonly HandlesViewer _handlesViewer;
+
     public OpenedAppsService(string pluginDirectory)
     {
         _pluginDirectory = pluginDirectory ?? Directory.GetCurrentDirectory();
         _iconsDirectory = Path.Combine(_pluginDirectory, DefaultIconsDirectoryName);
-
         if (!Directory.Exists(_iconsDirectory))
         {
             Directory.CreateDirectory(_iconsDirectory);
         }
-
-        WriteOpenedAppsModels();
+        
+        _handlesViewer = new HandlesViewer();
+        
+        _ = WriteOpenedAppsModels();
     }
 
     public List<AppModel> AppModels { get; } = new List<AppModel>(DefaultModelsCapacity);
@@ -55,27 +60,61 @@ public class OpenedAppsService
         }
     }
 
-    private void WriteOpenedAppsModels()
+    private async Task WriteOpenedAppsModels()
     {
         var processes = Process.GetProcesses();
         foreach (var process in processes)
         {
-            var windowTitle = process.MainWindowTitle;
-            if (windowTitle.Length > 0 && process.MainModule is not null &&
-                !IsInExcludedDirectory(process.MainModule.FileName))
+            if (!IsValidProcess(process))
+                continue;
+
+            var mainModule = process.MainModule;
+            var moduleName = mainModule.ModuleName;
+
+            if (_handlesViewer.TryGetHandlesExplorer(moduleName, out IHandlesExplorer handlesExplorer))
             {
-                var mainModule = process.MainModule;
+                await AddHandlesExplorerPaths(process, handlesExplorer, moduleName);
+            }
+            else
+            {
+                AddDefaultPath(process, moduleName);
+            }
+        }
+    }
+
+    private bool IsValidProcess(Process process)
+    {
+        return process.MainWindowTitle.Length > 0 && process.MainModule is not null &&
+               !IsInExcludedDirectory(process.MainModule.FileName);
+    }
+
+    private async Task AddHandlesExplorerPaths(Process process, IHandlesExplorer handlesExplorer, string moduleName)
+    {
+        var paths = await _handlesViewer.GetOpenedPaths(process.Id, handlesExplorer);
+        foreach (var path in paths)
+        {
+            if (path.Length > 0)
+            {
                 AppModels.Add(new AppModel
                 {
-                    AppModuleName = mainModule.ModuleName[..^4],
-                    ExecutionFilePath = mainModule.FileName
+                    AppModuleName = moduleName[..^4],
+                    ExecutionFilePath = path
                 });
             }
         }
     }
 
+    private void AddDefaultPath(Process process, string moduleName)
+    {
+        AppModels.Add(new AppModel
+        {
+            AppModuleName = moduleName[..^4],
+            ExecutionFilePath = process.MainModule?.FileName
+        });
+    }
+
     private bool IsInExcludedDirectory(string filename)
     {
-        return ExcludedFullPathDirectories.Any(filename.StartsWith);
+        return _excludedFullPathDirectories.Any(filename.StartsWith);
     }
 }
