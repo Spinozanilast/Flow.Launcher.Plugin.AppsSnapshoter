@@ -22,38 +22,10 @@ public class HandlesViewer
         };
     }
 
-    // public static List<string> GetOpenedExplorerPaths()
-    // {
-    //     var openedExplorerPaths = new List<string>();
-    //     var shellType = Type.GetTypeFromProgID("Shell.Application");
-    //     dynamic shell = Activator.CreateInstance(shellType);
-    //
-    //     try
-    //     {
-    //         var windows = shell.Windows();
-    //         for (int i = 0; i < windows.Count; i++)
-    //         {
-    //             dynamic ie = windows.Item(i);
-    //             if (ie == null) continue;
-    //
-    //             if (ie.FullName == ExplorerPath)
-    //             {
-    //                 openedExplorerPaths.Add(ie.LocationURL);
-    //             }
-    //         }
-    //
-    //         return openedExplorerPaths;
-    //     }
-    //     finally
-    //     {
-    //         Marshal.FinalReleaseComObject(shell);
-    //     }
-    // }
-
-    public async Task<string[]> GetOpenedPaths(int processId, IHandleExplorer handleExplorer)
+    public async Task<List<string>> GetOpenedPaths(int processId, IHandlesExplorer handlesExplorer)
     {
         var handles = await FindConcreteHandlesByLineEndAsync(processId);
-        return handleExplorer.GetPathsByHandles(handles);
+        return handlesExplorer.GetPathsByHandles(handles, ExtractFilenameFromHandleOutput);
     }
 
     private async Task<HashSet<string>> FindConcreteHandlesByLineEndAsync(int processId)
@@ -67,9 +39,16 @@ public class HandlesViewer
         {
             handlesLines.Add(await process.StandardOutput.ReadLineAsync());
         }
-
+        
+        
         return handlesLines;
     }
 
     private void ChangeHandlesArgs(string args) => _handlesStartInfo.Arguments = args;
+    
+    private string ExtractFilenameFromHandleOutput(string handleOutput)
+    {
+        var filenameIndex = handleOutput.IndexOf(":\\", StringComparison.Ordinal) - 1;
+        return handleOutput.Substring(filenameIndex);
+    }
 }
