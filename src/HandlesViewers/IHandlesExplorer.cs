@@ -13,6 +13,7 @@ public interface IHandlesExplorer
     /// </summary>
     /// <param name="handles">A set of handles to explore.</param>
     /// <param name="filenameExtractor">A function to extract filenames from handles.</param>
+    /// <param name="windowText">The Main window title </param>
     /// <returns>A list of paths associated with the provided handles.</returns>
-    List<string> GetPathsByHandles(HashSet<string> handles, Func<string, string> filenameExtractor);
+    List<string> GetPathsByHandles(HashSet<string> handles, Func<string, string> filenameExtractor, string windowText = "");
 }

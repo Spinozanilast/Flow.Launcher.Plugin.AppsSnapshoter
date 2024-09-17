@@ -12,7 +12,8 @@ public class VideoHandlesExplorer : IHandlesExplorer
         ".mp4", ".mkv", ".avi", ".mov", ".wmv", ".flv", ".webm", ".mpg", ".mpeg", ".m4v"
     };
 
-    public List<string> GetPathsByHandles(HashSet<string> handles, Func<string, string> filenameExtractor)
+    public List<string> GetPathsByHandles(HashSet<string> handles, Func<string, string> filenameExtractor,
+        string windowText = "")
     {
         if (handles.Count == 1 && handles.First() == "No matching handles found.")
         {

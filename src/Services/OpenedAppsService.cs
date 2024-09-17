@@ -14,31 +14,38 @@ public class OpenedAppsService
 {
     private const int DefaultModelsCapacity = 5;
     private const string DefaultIconsDirectoryName = "Icons";
+    private const string DefaultAppIconFileName = "application-default.png";
     private const string DefaultIconsImagesExtension = ".png";
 
     private readonly string[] _excludedFullPathDirectories =
     {
-        "C:\\WINDOWS\\SystemApps",
-        "C:\\WINDOWS\\system32",
+        "WindowsApps",
+        "SystemApps",
     };
-
+    
     private readonly string _pluginDirectory;
     private readonly string _iconsDirectory;
 
     private readonly HandlesViewer _handlesViewer;
+    
+    public static async Task<OpenedAppsService> CreateAsync(string pluginDirectory)
+    {
+        var service = new OpenedAppsService(pluginDirectory);
+        await service.WriteOpenedAppsModels();
+        return service;
+    }
 
-    public OpenedAppsService(string pluginDirectory)
+    private OpenedAppsService(string pluginDirectory)
     {
         _pluginDirectory = pluginDirectory ?? Directory.GetCurrentDirectory();
         _iconsDirectory = Path.Combine(_pluginDirectory, DefaultIconsDirectoryName);
+        Path.Combine(_pluginDirectory, DefaultAppIconFileName);
         if (!Directory.Exists(_iconsDirectory))
         {
             Directory.CreateDirectory(_iconsDirectory);
         }
         
-        _handlesViewer = new HandlesViewer();
-        
-        _ = WriteOpenedAppsModels();
+        _handlesViewer = new HandlesViewer(_pluginDirectory);
     }
 
     public List<AppModel> AppModels { get; } = new List<AppModel>(DefaultModelsCapacity);
@@ -55,8 +62,8 @@ public class OpenedAppsService
             }
 
             var icon = Icon.ExtractAssociatedIcon(model.ExecutionFilePath);
-            var bitmapIcon = icon.ToBitmap();
-            bitmapIcon.Save(iconFilePath, ImageFormat.Png);
+            var bitmapIcon = icon?.ToBitmap();
+            bitmapIcon?.Save(iconFilePath, ImageFormat.Png);
         }
     }
 
@@ -69,11 +76,12 @@ public class OpenedAppsService
                 continue;
 
             var mainModule = process.MainModule;
-            var moduleName = mainModule.ModuleName;
+            var moduleName = mainModule?.ModuleName;
+            var windowText = process.MainWindowTitle;
 
             if (_handlesViewer.TryGetHandlesExplorer(moduleName, out IHandlesExplorer handlesExplorer))
             {
-                await AddHandlesExplorerPaths(process, handlesExplorer, moduleName);
+                await AddHandlesExplorerPaths(process, handlesExplorer, moduleName, windowText);
             }
             else
             {
@@ -88,9 +96,9 @@ public class OpenedAppsService
                !IsInExcludedDirectory(process.MainModule.FileName);
     }
 
-    private async Task AddHandlesExplorerPaths(Process process, IHandlesExplorer handlesExplorer, string moduleName)
+    private async Task AddHandlesExplorerPaths(Process process, IHandlesExplorer handlesExplorer, string moduleName, string windowText = "")
     {
-        var paths = await _handlesViewer.GetOpenedPaths(process.Id, handlesExplorer);
+        var paths = await _handlesViewer.GetOpenedPaths(process.Id, handlesExplorer, windowText);
         foreach (var path in paths)
         {
             if (path.Length > 0)
@@ -98,7 +106,7 @@ public class OpenedAppsService
                 AppModels.Add(new AppModel
                 {
                     AppModuleName = moduleName[..^4],
-                    ExecutionFilePath = path
+                    ExecutionFilePath = path,
                 });
             }
         }
@@ -115,6 +123,6 @@ public class OpenedAppsService
 
     private bool IsInExcludedDirectory(string filename)
     {
-        return _excludedFullPathDirectories.Any(filename.StartsWith);
+        return _excludedFullPathDirectories.Any(dir => filename.Contains(dir));
     }
 }

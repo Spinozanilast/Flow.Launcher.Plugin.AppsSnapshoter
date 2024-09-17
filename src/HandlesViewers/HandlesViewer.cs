@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Flow.Launcher.Plugin.SnapshotApps.Models;
@@ -27,33 +28,44 @@ public class HandlesViewer
         )
     };
 
-    private static string HandlesCliFilename = "handle.exe";
+    private static readonly string HandleCliFileName = "handle.exe";
     private readonly ProcessStartInfo _handlesStartInfo;
 
-    public HandlesViewer()
+    public HandlesViewer(string pluginDirectory)
     {
+        var handlesCliFilename = Path.Combine(pluginDirectory, HandleCliFileName);
+
+        if (!File.Exists(handlesCliFilename))
+        {
+            throw new Exception(handlesCliFilename + " doesnt found");
+        }
+
         _handlesStartInfo = new ProcessStartInfo
         {
-            FileName = HandlesCliFilename,
+            FileName = handlesCliFilename,
             RedirectStandardOutput = true,
             UseShellExecute = false,
             CreateNoWindow = true
         };
     }
 
-    public async Task<List<string>> GetOpenedPaths(int processId, IHandlesExplorer handlesExplorer)
+    public async Task<List<string>> GetOpenedPaths(int processId, IHandlesExplorer handlesExplorer, string windowText)
     {
-        var handles = await FindConcreteHandlesByLineEndAsync(processId);
-        return handlesExplorer.GetPathsByHandles(handles, ExtractFilenameFromHandleOutput);
+        var appHandles = await FindConcreteHandlesByLineEndAsync(processId);
+        return handlesExplorer.GetPathsByHandles(
+            appHandles,
+            filenameExtractor: ExtractFilenameFromHandleOutput,
+            windowText);
     }
 
     public bool TryGetHandlesExplorer(string moduleName, out IHandlesExplorer handlesExplorer)
     {
         handlesExplorer = null;
-        
+
         foreach (var appHandlesCategory in AppHandlesCategories)
         {
-            if (appHandlesCategory.Apps.Any(appExecutable => moduleName == appExecutable))
+            if (appHandlesCategory.Apps.Any(appExecutable =>
+                    moduleName.Contains(appExecutable, StringComparison.OrdinalIgnoreCase)))
             {
                 handlesExplorer = appHandlesCategory.HandlesExplorer;
                 return true;
@@ -63,9 +75,9 @@ public class HandlesViewer
         return false;
     }
 
-    private async Task<HashSet<string>> FindConcreteHandlesByLineEndAsync(int processId)
+    private async Task<HashSet<string>> FindConcreteHandlesByLineEndAsync(int processId, string windowText = "")
     {
-        ChangeHandlesArgs($"-p {processId}");
+        ChangeHandlesArgs($"-p {processId} {windowText} -nobanner");
         var process = Process.Start(_handlesStartInfo);
 
         ArgumentNullException.ThrowIfNull(process, nameof(process));
@@ -74,6 +86,8 @@ public class HandlesViewer
         {
             handlesLines.Add(await process.StandardOutput.ReadLineAsync());
         }
+
+        process.Close();
 
         return handlesLines;
     }

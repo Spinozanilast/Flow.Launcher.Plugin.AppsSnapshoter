@@ -218,7 +218,7 @@ namespace Flow.Launcher.Plugin.SnapshotApps
 
         private async Task<List<AppModel>> GetCurrentlyOpenAppsAsync(CancellationToken cancellationToken)
         {
-            _openedAppsService = new OpenedAppsService(_pluginDirectory);
+            _openedAppsService = await OpenedAppsService.CreateAsync(_pluginDirectory);
 
             await Task.Run(() => _openedAppsService.WriteAppsIconsToModels(), cancellationToken);
 
