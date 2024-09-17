@@ -51,7 +51,13 @@ public class HandlesViewer
 
     public async Task<List<string>> GetOpenedPaths(int processId, IHandlesExplorer handlesExplorer, string windowText)
     {
-        var appHandles = await FindConcreteHandlesByLineEndAsync(processId);
+        var appHandles = new HashSet<string>();
+        
+        if (handlesExplorer.GetType() != typeof(ExplorerHandlesExplorer) && !string.IsNullOrEmpty(windowText))
+        {
+            appHandles = await FindConcreteHandlesByLineEndAsync(processId, windowText);
+        }
+
         return handlesExplorer.GetPathsByHandles(
             appHandles,
             filenameExtractor: ExtractFilenameFromHandleOutput,
@@ -88,7 +94,6 @@ public class HandlesViewer
         }
 
         process.Close();
-
         return handlesLines;
     }
 

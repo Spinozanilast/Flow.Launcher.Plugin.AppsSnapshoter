@@ -113,6 +113,8 @@ public class SnapshotManager
         return SnapshotBinaryFormatter.DeserializeSnapshot(fileStream);
     }
 
+    public List<AppModel> GetSnapshotApps(string snapshotName) => GetSnapshot(snapshotName).AppModelsIncluded;
+
     private string[] GetSnapshotsNames() => _fileService.GetFileNames();
 
     private FileStream OpenExistingFileWithSnapshot(string snapshotName) =>

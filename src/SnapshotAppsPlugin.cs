@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Documents;
 using Flow.Launcher.Plugin.SnapshotApps.Extensions;
 using Flow.Launcher.Plugin.SnapshotApps.Models;
 using Flow.Launcher.Plugin.SnapshotApps.Services;
@@ -20,6 +21,7 @@ namespace Flow.Launcher.Plugin.SnapshotApps
         private const string PluginIconPath = "/icon.png";
         private const string SnapshotStandardIconPath = "snapshot.png";
         private const string ListSnapshotsKeyword = "list";
+        private const string ListSnapshotAppsKeyword = "apps";
 
         public Task InitAsync(PluginInitContext context)
         {
@@ -39,12 +41,14 @@ namespace Flow.Launcher.Plugin.SnapshotApps
 
             if (queryFirstSearch.ToLower() == ListSnapshotsKeyword)
             {
-                return GetSnaphotsList();
+                return GetSnaphotsResultsList();
             }
 
             if (_snapshotManager.IsSnapshotExists(queryFirstSearch))
             {
-                return GetSingleSnapshotResults(queryFirstSearch, false, querySecondSearch);
+                return querySecondSearch.ToLower() == ListSnapshotAppsKeyword
+                    ? GetSnapshotAppsResultsList(queryFirstSearch)
+                    : GetSingleSnapshotResults(queryFirstSearch, false, querySecondSearch);
             }
 
             var createResult = GetCreateSnapshotResult(queryFirstSearch, cancellationToken);
@@ -111,15 +115,21 @@ namespace Flow.Launcher.Plugin.SnapshotApps
                 .WithFuncReturningBoolAction(
                     c =>
                     {
-                        try
-                        {
-                            _context.API.ChangeQuery(_pluginKeyWord + " list");
-                        }
-                        catch (Exception)
-                        {
-                            _context.API.ShowMsg("There are no snapshots located.", "Create Snapshots");
-                        }
-
+                        _context.API.ChangeQuery(_pluginKeyWord + " " + ListSnapshotsKeyword);
+                        return false;
+                    }
+                );
+        }
+        
+        private Result GetSnapshotAppsListResult(string currentSnapshotName)
+        {
+            return new Result()
+                .WithTitle("List Apps")
+                .WithIconPath("ActionsIcons/list-icon.png")
+                .WithFuncReturningBoolAction(
+                    c =>
+                    {
+                        _context.API.ChangeQuery($"{_pluginKeyWord} {currentSnapshotName} {ListSnapshotAppsKeyword}");
                         return false;
                     }
                 );
@@ -177,24 +187,6 @@ namespace Flow.Launcher.Plugin.SnapshotApps
                 );
         }
 
-        private List<Result> GetSingleSnapshotResults(string selectedSnapshotName, bool isFromList,
-            string newSnapshotName = " ")
-        {
-            if (isFromList)
-            {
-                _context.API.ChangeQuery($"{_pluginKeyWord} {selectedSnapshotName}");
-            }
-
-            var results = new List<Result>
-            {
-                GetRemoveSnapshotResult(selectedSnapshotName),
-                GetOpenSnapshotResult(selectedSnapshotName),
-                GetRenameSnapshotResult(selectedSnapshotName, newSnapshotName)
-            };
-
-            return results;
-        }
-
         private async Task CreateAppsSnapshotAsync(string snapshotName, CancellationToken cancellationToken)
         {
             try
@@ -216,6 +208,26 @@ namespace Flow.Launcher.Plugin.SnapshotApps
             }
         }
 
+
+        private List<Result> GetSingleSnapshotResults(string selectedSnapshotName, bool isFromList,
+            string newSnapshotName = " ")
+        {
+            if (isFromList)
+            {
+                _context.API.ChangeQuery($"{_pluginKeyWord} {selectedSnapshotName}");
+            }
+
+            var results = new List<Result>
+            {
+                GetRemoveSnapshotResult(selectedSnapshotName),
+                GetOpenSnapshotResult(selectedSnapshotName),
+                GetRenameSnapshotResult(selectedSnapshotName, newSnapshotName),
+                GetSnapshotAppsListResult(selectedSnapshotName)
+            };
+
+            return results;
+        }
+
         private async Task<List<AppModel>> GetCurrentlyOpenAppsAsync(CancellationToken cancellationToken)
         {
             _openedAppsService = await OpenedAppsService.CreateAsync(_pluginDirectory);
@@ -233,7 +245,11 @@ namespace Flow.Launcher.Plugin.SnapshotApps
             return isClosingAfterMsg;
         }
 
-        private List<Result> GetSnaphotsList() => _snapshotManager.GetSnapshots().ToResults(GetSingleSnapshotResults);
+        private List<Result> GetSnaphotsResultsList() =>
+            _snapshotManager.GetSnapshots().ToResults(listResultAction: GetSingleSnapshotResults);
+
+        private List<Result> GetSnapshotAppsResultsList(string selectedSnapshotName) =>
+            _snapshotManager.GetSnapshotApps(selectedSnapshotName).ToResults();
 
         private void ResetSearchToActionWord() => _context.API.ChangeQuery(_pluginKeyWord);
     }

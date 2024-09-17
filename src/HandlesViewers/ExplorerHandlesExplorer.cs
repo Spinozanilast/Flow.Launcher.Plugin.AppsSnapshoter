@@ -6,8 +6,6 @@ namespace Flow.Launcher.Plugin.SnapshotApps.HandlesViewers;
 
 public class ExplorerHandlesExplorer : IHandlesExplorer
 {
-
-    
     public List<string> GetPathsByHandles(HashSet<string> handles, Func<string, string> filenameExtractor,
         string windowText = "")
     {
@@ -35,10 +33,10 @@ public class ExplorerHandlesExplorer : IHandlesExplorer
     {
         var openedExplorerPaths = new List<string>();
         var shellType = Type.GetTypeFromProgID("Shell.Application");
-        ArgumentNullException.ThrowIfNull(shellType); 
-        
+        ArgumentNullException.ThrowIfNull(shellType);
+
         dynamic shell = Activator.CreateInstance(shellType);
-        ArgumentNullException.ThrowIfNull(shell); 
+        ArgumentNullException.ThrowIfNull(shell);
 
         try
         {

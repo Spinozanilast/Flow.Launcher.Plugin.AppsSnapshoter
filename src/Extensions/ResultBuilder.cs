@@ -22,6 +22,12 @@ public static class ResultBuilder
         return result;
     }
 
+    public static Result WithSubtitleToolTip(this Result result, string subtitleToolTip)
+    {
+        result.SubTitleToolTip = subtitleToolTip;
+        return result;
+    }
+
     /// <summary>
     /// Return current result with actual action
     /// </summary>

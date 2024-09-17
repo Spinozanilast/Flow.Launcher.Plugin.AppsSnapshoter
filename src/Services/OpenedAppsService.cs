@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -17,17 +18,18 @@ public class OpenedAppsService
     private const string DefaultAppIconFileName = "application-default.png";
     private const string DefaultIconsImagesExtension = ".png";
 
-    private readonly string[] _excludedFullPathDirectories =
+    private readonly string[] _excludedDirectories =
     {
         "WindowsApps",
         "SystemApps",
     };
-    
+
+    private readonly string[] _includedApps = { "Video.UI.exe, explorer.exe" };
     private readonly string _pluginDirectory;
     private readonly string _iconsDirectory;
 
     private readonly HandlesViewer _handlesViewer;
-    
+
     public static async Task<OpenedAppsService> CreateAsync(string pluginDirectory)
     {
         var service = new OpenedAppsService(pluginDirectory);
@@ -44,7 +46,7 @@ public class OpenedAppsService
         {
             Directory.CreateDirectory(_iconsDirectory);
         }
-        
+
         _handlesViewer = new HandlesViewer(_pluginDirectory);
     }
 
@@ -55,6 +57,7 @@ public class OpenedAppsService
         foreach (var model in AppModels)
         {
             var iconFilePath = Path.Combine(_iconsDirectory, model.AppModuleName) + DefaultIconsImagesExtension;
+
             if (File.Exists(iconFilePath))
             {
                 model.IconPath = iconFilePath;
@@ -64,6 +67,7 @@ public class OpenedAppsService
             var icon = Icon.ExtractAssociatedIcon(model.ExecutionFilePath);
             var bitmapIcon = icon?.ToBitmap();
             bitmapIcon?.Save(iconFilePath, ImageFormat.Png);
+            model.IconPath = iconFilePath;
         }
     }
 
@@ -92,11 +96,20 @@ public class OpenedAppsService
 
     private bool IsValidProcess(Process process)
     {
-        return process.MainWindowTitle.Length > 0 && process.MainModule is not null &&
-               !IsInExcludedDirectory(process.MainModule.FileName);
+        var mainModule = process.MainModule;
+        return process.MainWindowTitle.Length > 0 && mainModule is not null
+                                                  &&
+                                                  (!IsInExcludedDirectory(mainModule.FileName) ||
+                                                   (
+                                                       IsInExcludedDirectory(mainModule.FileName)
+                                                       &&
+                                                       IsInIncludedApps(mainModule.ModuleName)
+                                                   )
+                                                  );
     }
 
-    private async Task AddHandlesExplorerPaths(Process process, IHandlesExplorer handlesExplorer, string moduleName, string windowText = "")
+    private async Task AddHandlesExplorerPaths(Process process, IHandlesExplorer handlesExplorer, string moduleName,
+        string windowText = "")
     {
         var paths = await _handlesViewer.GetOpenedPaths(process.Id, handlesExplorer, windowText);
         foreach (var path in paths)
@@ -123,6 +136,11 @@ public class OpenedAppsService
 
     private bool IsInExcludedDirectory(string filename)
     {
-        return _excludedFullPathDirectories.Any(dir => filename.Contains(dir));
+        return _excludedDirectories.Any(dir => filename.Contains(dir));
+    }
+
+    private bool IsInIncludedApps(string moduleName)
+    {
+        return _includedApps.Any(app => app.Equals(moduleName, StringComparison.OrdinalIgnoreCase));
     }
 }
