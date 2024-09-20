@@ -82,9 +82,9 @@ namespace Flow.Launcher.Plugin.SnapshotApps
                     {
                         _snapshotManager.OpenSnapshotApps(selectedSnapshotName);
                     }
-                    catch (Exception)
+                    catch (Exception e)
                     {
-                        return ShowMsg("No such snapshot", $"There is no snapshot with name {selectedSnapshotName}");
+                        return ShowMsg("No such snapshot", e.Message);
                     }
 
                     return true;
@@ -120,7 +120,7 @@ namespace Flow.Launcher.Plugin.SnapshotApps
                     }
                 );
         }
-        
+
         private Result GetSnapshotAppsListResult(string currentSnapshotName)
         {
             return new Result()
@@ -192,6 +192,13 @@ namespace Flow.Launcher.Plugin.SnapshotApps
             try
             {
                 var openedApps = await GetCurrentlyOpenAppsAsync(cancellationToken);
+
+                if (openedApps.Count == 0)
+                {
+                    _context.API.ShowMsgError("Smth goes wrong", "There are no app models to write in snapshots");
+                    return;
+                }
+
                 var snapshotIcon = openedApps[0].IconPath ?? SnapshotStandardIconPath;
                 var snapshot = new Snapshot
                 {
@@ -230,10 +237,12 @@ namespace Flow.Launcher.Plugin.SnapshotApps
 
         private async Task<List<AppModel>> GetCurrentlyOpenAppsAsync(CancellationToken cancellationToken)
         {
-            _openedAppsService = await OpenedAppsService.CreateAsync(_pluginDirectory);
-
+            _openedAppsService = await OpenedAppsService.CreateAsync(_pluginDirectory, _context);
             await Task.Run(() => _openedAppsService.WriteAppsIconsToModels(), cancellationToken);
 
+            var writedAppsCount = _openedAppsService.AppModels.Count;
+            LogInfo(nameof(GetCurrentlyOpenAppsAsync),
+                "Writed Apps Count is " + writedAppsCount);
             return _openedAppsService.AppModels;
         }
 
@@ -252,5 +261,8 @@ namespace Flow.Launcher.Plugin.SnapshotApps
             _snapshotManager.GetSnapshotApps(selectedSnapshotName).ToResults();
 
         private void ResetSearchToActionWord() => _context.API.ChangeQuery(_pluginKeyWord);
+
+        private void LogInfo(string methodName, string message) =>
+            _context.API.LogInfo(nameof(SnapshotApps), message, methodName);
     }
 }

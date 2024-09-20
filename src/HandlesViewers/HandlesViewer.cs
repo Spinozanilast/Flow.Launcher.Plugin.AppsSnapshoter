@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Flow.Launcher.Plugin.SnapshotApps.Models;
+using static Flow.Launcher.Plugin.SnapshotApps.HandlesViewers.FileNameExtractFromHandles;
 
 namespace Flow.Launcher.Plugin.SnapshotApps.HandlesViewers;
 
@@ -14,15 +15,15 @@ public class HandlesViewer
     {
         new(
             CategoryName: "Explorer",
-            Apps: new[] { "explorer.exe" },
+            Apps: new[] { "explorer" },
             HandlesExplorer: new ExplorerHandlesExplorer()
         ),
         new(
             CategoryName: "VideoPlayers",
             Apps: new[]
             {
-                "Video.UI.exe", "vlc.exe", "wmplayer.exe", "mpc-hc.exe",
-                "potplayer.exe", "kmplayer.exe", "bsplayer.exe"
+                "Video.UI", "vlc", "wmplayer", "mpc-hc",
+                "potplayer", "kmplayer", "bsplayer"
             },
             HandlesExplorer: new VideoHandlesExplorer()
         )
@@ -51,16 +52,15 @@ public class HandlesViewer
 
     public async Task<List<string>> GetOpenedPaths(int processId, IHandlesExplorer handlesExplorer, string windowText)
     {
-        var appHandles = new HashSet<string>();
-        
-        if (handlesExplorer.GetType() != typeof(ExplorerHandlesExplorer) && !string.IsNullOrEmpty(windowText))
-        {
-            appHandles = await FindConcreteHandlesByLineEndAsync(processId, windowText);
-        }
+        if (handlesExplorer.GetType() == typeof(ExplorerHandlesExplorer) && string.IsNullOrEmpty(windowText))
+            return handlesExplorer.GetPathsByHandles(
+                pathsFromHandles: null,
+                windowText);
+
+        var appHandles = await FindConcreteHandlesByLineEndAsync(processId, windowText);
 
         return handlesExplorer.GetPathsByHandles(
             appHandles,
-            filenameExtractor: ExtractFilenameFromHandleOutput,
             windowText);
     }
 
@@ -87,21 +87,20 @@ public class HandlesViewer
         var process = Process.Start(_handlesStartInfo);
 
         ArgumentNullException.ThrowIfNull(process, nameof(process));
-        var handlesLines = new HashSet<string>();
+        
+        var paths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         while (!process.StandardOutput.EndOfStream)
         {
-            handlesLines.Add(await process.StandardOutput.ReadLineAsync());
+            var line = await process.StandardOutput.ReadLineAsync();
+            
+            if (!string.IsNullOrEmpty(line) && TryExtractFilenameFromHandleOutput(line, out var path)) 
+            {
+                paths.Add(path);
+            }
         }
-
         process.Close();
-        return handlesLines;
+        return paths;
     }
 
     private void ChangeHandlesArgs(string args) => _handlesStartInfo.Arguments = args;
-
-    private string ExtractFilenameFromHandleOutput(string handleOutput)
-    {
-        var filenameIndex = handleOutput.IndexOf(":\\", StringComparison.Ordinal) - 1;
-        return handleOutput.Substring(filenameIndex);
-    }
 }

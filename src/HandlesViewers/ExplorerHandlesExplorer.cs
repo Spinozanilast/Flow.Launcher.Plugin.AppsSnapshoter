@@ -1,12 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using static Flow.Launcher.Plugin.SnapshotApps.HandlesViewers.FileNameExtractFromHandles;
 
 namespace Flow.Launcher.Plugin.SnapshotApps.HandlesViewers;
 
 public class ExplorerHandlesExplorer : IHandlesExplorer
 {
-    public List<string> GetPathsByHandles(HashSet<string> handles, Func<string, string> filenameExtractor,
+    private const string ExplorerFullFileName = "C:\\WINDOWS\\Explorer.EXE";
+
+    public List<string> GetPathsByHandles(HashSet<string> pathsFromHandles,
         string windowText = "")
     {
         if (string.IsNullOrEmpty(windowText))
@@ -14,14 +17,19 @@ public class ExplorerHandlesExplorer : IHandlesExplorer
             return MarshalingExplorerOpenedPaths();
         }
 
-        var openedExplorerPaths = new List<string>();
-        foreach (var handle in handles)
+        var strokes = windowText.Split(' ');
+        if (strokes.Length > 1)
         {
-            var isItCurrentlyOpenedPath = handle.EndsWith(windowText);
+            windowText = strokes[0];
+        }
+
+        var openedExplorerPaths = new List<string>();
+        foreach (var path in pathsFromHandles)
+        {
+            var isItCurrentlyOpenedPath = path.EndsWith(windowText, StringComparison.OrdinalIgnoreCase);
 
             if (isItCurrentlyOpenedPath)
             {
-                var path = filenameExtractor(handle);
                 openedExplorerPaths.Add(path);
             }
         }
@@ -46,7 +54,7 @@ public class ExplorerHandlesExplorer : IHandlesExplorer
                 dynamic ie = windows.Item(i);
                 if (ie == null) continue;
 
-                if (ie.FullName == "explorer.exe")
+                if (ie.FullName.Equals(ExplorerFullFileName, StringComparison.OrdinalIgnoreCase))
                 {
                     openedExplorerPaths.Add(ie.LocationURL);
                 }

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
+using static Flow.Launcher.Plugin.SnapshotApps.HandlesViewers.FileNameExtractFromHandles;
 
 namespace Flow.Launcher.Plugin.SnapshotApps.HandlesViewers;
 
@@ -12,21 +12,20 @@ public class VideoHandlesExplorer : IHandlesExplorer
         ".mp4", ".mkv", ".avi", ".mov", ".wmv", ".flv", ".webm", ".mpg", ".mpeg", ".m4v"
     };
 
-    public List<string> GetPathsByHandles(HashSet<string> handles, Func<string, string> filenameExtractor,
+    public List<string> GetPathsByHandles(HashSet<string> pathsFromHandles,
         string windowText = "")
     {
-        if (handles.Count == 1 && handles.First() == "No matching handles found.")
+        if (pathsFromHandles.Count == 1 && pathsFromHandles.First() == "No matching handles found.")
         {
-            throw new ArgumentException("There are no any process handles.", nameof(handles));
+            throw new ArgumentException("There are no any process handles.", nameof(pathsFromHandles));
         }
 
         var paths = new List<string>();
 
-        foreach (var handle in handles)
+        foreach (var path in pathsFromHandles)
         {
-            if (IsVideoFile(handle))
+            if (IsVideoFile(path))
             {
-                var path = filenameExtractor(handle);
                 paths.Add(path);
             }
         }

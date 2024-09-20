@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -18,27 +19,36 @@ public class OpenedAppsService
     private const string DefaultAppIconFileName = "application-default.png";
     private const string DefaultIconsImagesExtension = ".png";
 
+    #region limitations
+
     private readonly string[] _excludedDirectories =
     {
         "WindowsApps",
         "SystemApps",
+        "system32"
     };
 
-    private readonly string[] _includedApps = { "Video.UI.exe, explorer.exe" };
+    private readonly string[] _includedProcesses = { "Video.UI", "explorer" };
+
+    #endregion
+
     private readonly string _pluginDirectory;
     private readonly string _iconsDirectory;
 
     private readonly HandlesViewer _handlesViewer;
 
-    public static async Task<OpenedAppsService> CreateAsync(string pluginDirectory)
+    private PluginInitContext _context;
+
+    public static async Task<OpenedAppsService> CreateAsync(string pluginDirectory, PluginInitContext context)
     {
-        var service = new OpenedAppsService(pluginDirectory);
+        var service = new OpenedAppsService(pluginDirectory, context);
         await service.WriteOpenedAppsModels();
         return service;
     }
 
-    private OpenedAppsService(string pluginDirectory)
+    private OpenedAppsService(string pluginDirectory, PluginInitContext context)
     {
+        _context = context;
         _pluginDirectory = pluginDirectory ?? Directory.GetCurrentDirectory();
         _iconsDirectory = Path.Combine(_pluginDirectory, DefaultIconsDirectoryName);
         Path.Combine(_pluginDirectory, DefaultAppIconFileName);
@@ -50,25 +60,31 @@ public class OpenedAppsService
         _handlesViewer = new HandlesViewer(_pluginDirectory);
     }
 
-    public List<AppModel> AppModels { get; } = new List<AppModel>(DefaultModelsCapacity);
+    public List<AppModel> AppModels { get; } = new(DefaultModelsCapacity);
 
     public void WriteAppsIconsToModels()
     {
         foreach (var model in AppModels)
         {
-            var iconFilePath = Path.Combine(_iconsDirectory, model.AppModuleName) + DefaultIconsImagesExtension;
-
-            if (File.Exists(iconFilePath))
-            {
-                model.IconPath = iconFilePath;
-                continue;
-            }
-
-            var icon = Icon.ExtractAssociatedIcon(model.ExecutionFilePath);
-            var bitmapIcon = icon?.ToBitmap();
-            bitmapIcon?.Save(iconFilePath, ImageFormat.Png);
-            model.IconPath = iconFilePath;
+            if (!string.IsNullOrEmpty(model.IconPath)) continue;
+            SetIconToAppModel(model);
         }
+    }
+
+    private void SetIconToAppModel(AppModel model, string executionFilePath = null)
+    {
+        var iconFilePath = Path.Combine(_iconsDirectory, model.AppModuleName) + DefaultIconsImagesExtension;
+
+        if (File.Exists(iconFilePath))
+        {
+            model.IconPath = iconFilePath;
+            return;
+        }
+
+        var icon = Icon.ExtractAssociatedIcon(executionFilePath ?? model.ExecutionFilePath);
+        var bitmapIcon = icon?.ToBitmap();
+        bitmapIcon?.Save(iconFilePath, ImageFormat.Png);
+        model.IconPath = iconFilePath;
     }
 
     private async Task WriteOpenedAppsModels()
@@ -94,20 +110,6 @@ public class OpenedAppsService
         }
     }
 
-    private bool IsValidProcess(Process process)
-    {
-        var mainModule = process.MainModule;
-        return process.MainWindowTitle.Length > 0 && mainModule is not null
-                                                  &&
-                                                  (!IsInExcludedDirectory(mainModule.FileName) ||
-                                                   (
-                                                       IsInExcludedDirectory(mainModule.FileName)
-                                                       &&
-                                                       IsInIncludedApps(mainModule.ModuleName)
-                                                   )
-                                                  );
-    }
-
     private async Task AddHandlesExplorerPaths(Process process, IHandlesExplorer handlesExplorer, string moduleName,
         string windowText = "")
     {
@@ -116,11 +118,14 @@ public class OpenedAppsService
         {
             if (path.Length > 0)
             {
-                AppModels.Add(new AppModel
+                var model = new AppModel()
                 {
                     AppModuleName = moduleName[..^4],
-                    ExecutionFilePath = path,
-                });
+                    ExecutionFilePath = path
+                };
+
+                SetIconToAppModel(model, process.MainModule?.FileName);
+                AppModels.Add(model);
             }
         }
     }
@@ -134,13 +139,32 @@ public class OpenedAppsService
         });
     }
 
+    private bool IsValidProcess(Process process)
+    {
+        try
+        {
+            if (IsInIncludedApps(process.ProcessName))
+            {
+                return true;
+            }
+
+            var mainModule = process.MainModule;
+            return mainModule is not null && process.MainWindowTitle.Length > 0 &&
+                   !IsInExcludedDirectory(mainModule.FileName);
+        }
+        catch (Win32Exception)
+        {
+            return false;
+        }
+    }
+
     private bool IsInExcludedDirectory(string filename)
     {
         return _excludedDirectories.Any(dir => filename.Contains(dir));
     }
 
-    private bool IsInIncludedApps(string moduleName)
+    private bool IsInIncludedApps(string processName)
     {
-        return _includedApps.Any(app => app.Equals(moduleName, StringComparison.OrdinalIgnoreCase));
+        return _includedProcesses.Any(app => processName.Equals(app, StringComparison.OrdinalIgnoreCase));
     }
 }

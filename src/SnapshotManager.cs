@@ -54,12 +54,17 @@ public class SnapshotManager
         }
 
         var snapshot = GetSnapshot(snapshotName);
+        var startInfo = new ProcessStartInfo
+        {
+            UseShellExecute = true
+        };
         foreach (var appModel in snapshot.AppModelsIncluded)
         {
             var exePath = appModel.ExecutionFilePath;
-            if (File.Exists(exePath))
+            if (File.Exists(exePath) || Uri.IsWellFormedUriString(exePath, UriKind.RelativeOrAbsolute))
             {
-                Process.Start(exePath);
+                startInfo.FileName = exePath;
+                Process.Start(startInfo);
             }
             else
             {
@@ -125,7 +130,4 @@ public class SnapshotManager
 
     private void DeleteFileWithSnapshot(string snapshotName) =>
         _fileService.DeleteFile(snapshotName);
-
-    private void RenameSnapshotFile(string oldSnapshotName, string newSnapshotName) =>
-        _fileService.RenameFile(oldSnapshotName, newSnapshotName);
 }
