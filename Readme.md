@@ -17,21 +17,27 @@ i.e. many standard Microsoft applications.
 
 * Select list result
 
-| Command     | Description                                           |
-|-------------|-------------------------------------------------------|
-| sa **list** | List currently existing snapshots, if they are exists |
+| Command       | Description                                           |
+|---------------|-------------------------------------------------------|
+| ```sa list``` | List currently existing snapshots, if they are exists |
+
+* Or select **List Snapshots** option to do the same
 
 ----------------------
 
 ### Snapshots Creating
 
-| Command                | Description                                                     |
-|------------------------|-----------------------------------------------------------------|
-| sa **{Snapshot Name}** | Create Snapshot with currently opened apps with _snapshot name_ |
+| Command                  | Description                                                                                            |
+|--------------------------|--------------------------------------------------------------------------------------------------------|
+| ```sa {Snapshot Name}``` | Create Snapshot with currently opened apps with _snapshot name_ with choosing **Create Result** option |
 
 ----------------------
 
 ### Open Snapshot
+
+| Command                  | Description                                                           |
+|--------------------------|-----------------------------------------------------------------------|
+| ```sa {Snapshot Name}``` | Open Snapshot apps with _snapshot name_ with choosing **Open** option |
 
 * Select Open result with written _Snapshot name_
 * Select Open result on Snapshot from List Result
@@ -40,6 +46,10 @@ i.e. many standard Microsoft applications.
 
 ### Remove Snapshot
 
+| Command                  | Description                                                          |
+|--------------------------|----------------------------------------------------------------------|
+| ```sa {Snapshot Name}``` | Remove Snapshot with _snapshot name_ with choosing **Remove** option |
+
 * Select Remove result with written _Snapshot name_
 * Select Remove result on Snapshot from List Result
 
@@ -47,10 +57,21 @@ i.e. many standard Microsoft applications.
 
 ### Rename Snapshot
 
+| Command                                              | Description                                                         |
+|------------------------------------------------------|---------------------------------------------------------------------|
+| ```sa {Current Snapshot Name} {New Snapshot Name}``` | Rename Snapshot with _Current Snapshot Name_ to _New Snapshot Name_ |
+
 * Select Rename result with written Snapshot name and also _New name_
 * Select Rename result on Snapshot from List Result and write new _Snapshot name_
+
+----------------------
+
+### Listing Snapshot Apps
+
+| Command                       | Description                                            |
+|-------------------------------|--------------------------------------------------------|
+| ```sa {Snapshot Name} apps``` | Listing apps included in snapshot with _Snapshot Name_ |
 
 ## TO DO
 
 * Individual app settings flow _(same operations as for snapshots(renaming, adding, deleting, changing executable path)_
-
