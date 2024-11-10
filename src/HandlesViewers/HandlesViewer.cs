@@ -57,6 +57,12 @@ public class HandlesViewer
                 pathsFromHandles: null,
                 windowText);
 
+        if (handlesExplorer.GetType() == typeof(VideoHandlesExplorer))
+        {
+            var videoHandles = await FindConcreteHandlesByLineEndAsync(processId);
+            return handlesExplorer.GetPathsByHandles(videoHandles, windowText);
+        }
+
         var appHandles = await FindConcreteHandlesByLineEndAsync(processId, windowText);
 
         return handlesExplorer.GetPathsByHandles(

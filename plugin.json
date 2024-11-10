@@ -2,7 +2,7 @@
     "ID": "0F7232DB70E54C9B91205480C0C56D1F",
     "ActionKeyword": "sa",
     "Name": "SnapshotApps",
-    "Description": "mark-anything in your system plugin for Flow-Launcher",
+    "Description": "Snapshot opened apps with help of plugin for Flow-Launcher",
     "Author": "spinozanilast",
     "Version": "1.0.0",
     "Language": "csharp",
