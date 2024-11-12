@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Documents;
 using Flow.Launcher.Plugin.SnapshotApps.Extensions;
 using Flow.Launcher.Plugin.SnapshotApps.Models;
 using Flow.Launcher.Plugin.SnapshotApps.Services;

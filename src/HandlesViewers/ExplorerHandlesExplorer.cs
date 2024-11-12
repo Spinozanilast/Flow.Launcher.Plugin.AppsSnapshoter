@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using static Flow.Launcher.Plugin.SnapshotApps.HandlesViewers.FileNameExtractFromHandles;
 
 namespace Flow.Launcher.Plugin.SnapshotApps.HandlesViewers;
 
