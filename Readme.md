@@ -18,6 +18,8 @@ applications. Applications that go into suspended state are not launched (
 see [UWP](https://learn.microsoft.com/en-us/windows/uwp/get-started/universal-application-platform-guide) applications),
 i.e. many standard Microsoft applications.
 
+https://github.com/user-attachments/assets/89a390a5-b815-499a-9584-9bbc3bd0e42c
+
 ## Usage
 
 ### The plugin is called on "sa" keyword by default.
