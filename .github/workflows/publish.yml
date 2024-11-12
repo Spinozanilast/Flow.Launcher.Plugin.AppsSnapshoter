@@ -20,7 +20,7 @@ jobs:
           path: 'plugin.json'
           prop_path: 'Version'
       - run: echo ${{steps.version.outputs.prop}}
-      - name: Build
+      - name: Build Project and Create Zip
         run: |
           dotnet publish 'Flow.Launcher.Plugin.SnapshotApps.csproj' -r win-x64 -c Release -o "SnapshotApps-${{steps.version.outputs.prop}}"
           7z a -tzip "SnapshotApps-${{steps.version.outputs.prop}}.zip" "./SnapshotApps-${{steps.version.outputs.prop}}/*"
