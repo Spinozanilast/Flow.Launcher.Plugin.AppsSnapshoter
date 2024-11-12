@@ -2,13 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Flow.Launcher.Plugin.SnapshotApps.Extensions;
-using Flow.Launcher.Plugin.SnapshotApps.Models;
-using Flow.Launcher.Plugin.SnapshotApps.Services;
+using Flow.Launcher.Plugin.AppsSnapshoter.Extensions;
+using Flow.Launcher.Plugin.AppsSnapshoter.Models;
+using Flow.Launcher.Plugin.AppsSnapshoter.Services;
 
-namespace Flow.Launcher.Plugin.SnapshotApps
+namespace Flow.Launcher.Plugin.AppsSnapshoter
 {
-    public class SnapshotApps : IAsyncPlugin
+    public class AppsSnapshoter : IAsyncPlugin
     {
         private string _pluginDirectory;
         private string _pluginKeyWord;
@@ -20,7 +20,7 @@ namespace Flow.Launcher.Plugin.SnapshotApps
         private const string PluginIconPath = "/icon.png";
         private const string SnapshotStandardIconPath = "snapshot.png";
         private const string ListSnapshotsKeyword = "list";
-        private const string ListSnapshotAppsKeyword = "apps";
+        private const string ListAppsSnapshoterKeyword = "apps";
 
         public Task InitAsync(PluginInitContext context)
         {
@@ -45,8 +45,8 @@ namespace Flow.Launcher.Plugin.SnapshotApps
 
             if (_snapshotManager.IsSnapshotExists(queryFirstSearch))
             {
-                return querySecondSearch.ToLower() == ListSnapshotAppsKeyword
-                    ? GetSnapshotAppsResultsList(queryFirstSearch)
+                return querySecondSearch.ToLower() == ListAppsSnapshoterKeyword
+                    ? GetAppsSnapshoterResultsList(queryFirstSearch)
                     : GetSingleSnapshotResults(queryFirstSearch, false, querySecondSearch);
             }
 
@@ -79,7 +79,7 @@ namespace Flow.Launcher.Plugin.SnapshotApps
                 {
                     try
                     {
-                        _snapshotManager.OpenSnapshotApps(selectedSnapshotName);
+                        _snapshotManager.OpenAppsSnapshoter(selectedSnapshotName);
                     }
                     catch (Exception e)
                     {
@@ -120,7 +120,7 @@ namespace Flow.Launcher.Plugin.SnapshotApps
                 );
         }
 
-        private Result GetSnapshotAppsListResult(string currentSnapshotName)
+        private Result GetAppsSnapshoterListResult(string currentSnapshotName)
         {
             return new Result()
                 .WithTitle("List Apps")
@@ -128,7 +128,7 @@ namespace Flow.Launcher.Plugin.SnapshotApps
                 .WithFuncReturningBoolAction(
                     c =>
                     {
-                        _context.API.ChangeQuery($"{_pluginKeyWord} {currentSnapshotName} {ListSnapshotAppsKeyword}");
+                        _context.API.ChangeQuery($"{_pluginKeyWord} {currentSnapshotName} {ListAppsSnapshoterKeyword}");
                         return false;
                     }
                 );
@@ -228,7 +228,7 @@ namespace Flow.Launcher.Plugin.SnapshotApps
                 GetRemoveSnapshotResult(selectedSnapshotName),
                 GetOpenSnapshotResult(selectedSnapshotName),
                 GetRenameSnapshotResult(selectedSnapshotName, newSnapshotName),
-                GetSnapshotAppsListResult(selectedSnapshotName)
+                GetAppsSnapshoterListResult(selectedSnapshotName)
             };
 
             return results;
@@ -256,12 +256,12 @@ namespace Flow.Launcher.Plugin.SnapshotApps
         private List<Result> GetSnaphotsResultsList() =>
             _snapshotManager.GetSnapshots().ToResults(listResultAction: GetSingleSnapshotResults);
 
-        private List<Result> GetSnapshotAppsResultsList(string selectedSnapshotName) =>
-            _snapshotManager.GetSnapshotApps(selectedSnapshotName).ToResults();
+        private List<Result> GetAppsSnapshoterResultsList(string selectedSnapshotName) =>
+            _snapshotManager.GetAppsSnapshoter(selectedSnapshotName).ToResults();
 
         private void ResetSearchToActionWord() => _context.API.ChangeQuery(_pluginKeyWord);
 
         private void LogInfo(string methodName, string message) =>
-            _context.API.LogInfo(nameof(SnapshotApps), message, methodName);
+            _context.API.LogInfo(nameof(AppsSnapshoter), message, methodName);
     }
 }

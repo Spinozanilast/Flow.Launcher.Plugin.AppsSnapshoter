@@ -1,9 +1,9 @@
 ﻿using System;
 using System.IO;
-using Flow.Launcher.Plugin.SnapshotApps.Models;
+using Flow.Launcher.Plugin.AppsSnapshoter.Models;
 using ProtoBuf;
 
-namespace Flow.Launcher.Plugin.SnapshotApps;
+namespace Flow.Launcher.Plugin.AppsSnapshoter;
 
 public class SnapshotBinaryFormatter
 {

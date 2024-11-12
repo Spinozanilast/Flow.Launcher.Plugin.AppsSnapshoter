@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Flow.Launcher.Plugin.SnapshotApps.HandlesViewers;
+namespace Flow.Launcher.Plugin.AppsSnapshoter.HandlesViewers;
 
 public class VideoHandlesExplorer : IHandlesExplorer
 {

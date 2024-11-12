@@ -2,7 +2,7 @@
 using System.IO;
 using System.Linq;
 
-namespace Flow.Launcher.Plugin.SnapshotApps.Services
+namespace Flow.Launcher.Plugin.AppsSnapshoter.Services
 {
     /// <summary>
     /// Provides methods for managing files within a specified directory.

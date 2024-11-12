@@ -1,17 +1,22 @@
-Flow.Launcher.Plugin.SnapshotApps
+Flow.Launcher.Plugin.AppsSnasphoter
 ==================
 
 ## About
 
-<div align="center"><img src="snapshot.png" alt="plugin icon"/></div>
+
+<div align="center">
+
+[![Publish Release](https://github.com/Spinozanilast/Flow.Launcher.Plugin.AppsSnapshoter/actions/workflows/publish.yml/badge.svg)](https://github.com/Spinozanilast/Flow.Launcher.Plugin.AppsSnapshoter/actions/workflows/publish.yml)
+[![build](https://github.com/Spinozanilast/Flow.Launcher.Plugin.AppsSnapshoter/actions/workflows/build.yml/badge.svg)](https://github.com/Spinozanilast/Flow.Launcher.Plugin.AppsSnapshoter/actions/workflows/build.yml)
+
+  <img src="snapshot.png" alt="plugin icon"/>
+</div>
 
 A plugin for the [Flow launcher](https://github.com/Flow-Launcher/Flow.Launcher).
 This plugin allows you to save currently open applications for later launch. Open applications are windowed
 applications. Applications that go into suspended state are not launched (
 see [UWP](https://learn.microsoft.com/en-us/windows/uwp/get-started/universal-application-platform-guide) applications),
 i.e. many standard Microsoft applications.
-
-https://github.com/user-attachments/assets/df49c246-2a44-427d-82b5-9516d0b108c0
 
 ## Usage
 

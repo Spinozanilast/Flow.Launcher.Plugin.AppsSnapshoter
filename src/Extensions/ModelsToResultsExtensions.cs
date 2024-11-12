@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Flow.Launcher.Plugin.SnapshotApps.Models;
+using Flow.Launcher.Plugin.AppsSnapshoter.Models;
 
-namespace Flow.Launcher.Plugin.SnapshotApps.Extensions;
+namespace Flow.Launcher.Plugin.AppsSnapshoter.Extensions;
 
 public static class ModelsToResultsExtensions
 {

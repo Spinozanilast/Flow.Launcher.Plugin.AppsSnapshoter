@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using ProtoBuf;
 
-namespace Flow.Launcher.Plugin.SnapshotApps.Models;
+namespace Flow.Launcher.Plugin.AppsSnapshoter.Models;
 
 [ProtoContract]
 public class Snapshot

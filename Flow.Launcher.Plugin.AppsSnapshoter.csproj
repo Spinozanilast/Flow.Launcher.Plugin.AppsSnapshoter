@@ -2,14 +2,15 @@
 
     <PropertyGroup>
         <TargetFramework>net7.0-windows</TargetFramework>
-        <PackageId>Flow.Launcher.Plugin.SnapshotApps</PackageId>
+        <PackageId>Flow.Launcher.Plugin.AppsSnapshoter</PackageId>
         <Authors>spinozanilast</Authors>
-        <PackageProjectUrl>https://github.com/spinozanilast/Flow.Launcher.Plugin.SnapshotApps</PackageProjectUrl>
-        <RepositoryUrl>https://github.com/spinozanilast/Flow.Launcher.Plugin.SnapshotApps</RepositoryUrl>
+        <PackageProjectUrl>https://github.com/spinozanilast/Flow.Launcher.Plugin.AppsSnapshoter</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/spinozanilast/Flow.Launcher.Plugin.AppsSnapshoter</RepositoryUrl>
         <PackageTags>flow-launcher flow-plugin</PackageTags>
         <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
         <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <RootNamespace>Flow.Launcher.Plugin.SnapshotApps</RootNamespace>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
@@ -18,7 +19,7 @@
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-        <OutputPath>C:\Users\Vadim\AppData\Roaming\FlowLauncher\Plugins\Flow.Launcher.Plugin.SnapshotApps</OutputPath>
+        <OutputPath>C:\Users\Vadim\AppData\Roaming\FlowLauncher\Plugins\Flow.Launcher.Plugin.AppsSnapshoter</OutputPath>
     </PropertyGroup>
 
     <ItemGroup>

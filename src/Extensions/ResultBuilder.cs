@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Flow.Launcher.Plugin.SnapshotApps.Extensions;
+namespace Flow.Launcher.Plugin.AppsSnapshoter.Extensions;
 
 public static class ResultBuilder
 {

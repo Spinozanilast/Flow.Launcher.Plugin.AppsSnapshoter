@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using Flow.Launcher.Plugin.SnapshotApps.Models;
-using Flow.Launcher.Plugin.SnapshotApps.Services;
+using Flow.Launcher.Plugin.AppsSnapshoter.Models;
+using Flow.Launcher.Plugin.AppsSnapshoter.Services;
 
-namespace Flow.Launcher.Plugin.SnapshotApps;
+namespace Flow.Launcher.Plugin.AppsSnapshoter;
 
 public class SnapshotManager
 {
@@ -46,7 +46,7 @@ public class SnapshotManager
         return snapshots;
     }
 
-    public void OpenSnapshotApps(string snapshotName)
+    public void OpenAppsSnapshoter(string snapshotName)
     {
         if (!IsSnapshotExists(snapshotName))
         {
@@ -118,7 +118,7 @@ public class SnapshotManager
         return SnapshotBinaryFormatter.DeserializeSnapshot(fileStream);
     }
 
-    public List<AppModel> GetSnapshotApps(string snapshotName) => GetSnapshot(snapshotName).AppModelsIncluded;
+    public List<AppModel> GetAppsSnapshoter(string snapshotName) => GetSnapshot(snapshotName).AppModelsIncluded;
 
     private string[] GetSnapshotsNames() => _fileService.GetFileNames();
 

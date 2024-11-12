@@ -4,10 +4,10 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Flow.Launcher.Plugin.SnapshotApps.Models;
-using static Flow.Launcher.Plugin.SnapshotApps.HandlesViewers.FileNameExtractFromHandles;
+using Flow.Launcher.Plugin.AppsSnapshoter.Models;
+using static Flow.Launcher.Plugin.AppsSnapshoter.HandlesViewers.FileNameExtractFromHandles;
 
-namespace Flow.Launcher.Plugin.SnapshotApps.HandlesViewers;
+namespace Flow.Launcher.Plugin.AppsSnapshoter.HandlesViewers;
 
 public class HandlesViewer
 {

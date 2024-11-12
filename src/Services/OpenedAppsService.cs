@@ -7,10 +7,10 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Flow.Launcher.Plugin.SnapshotApps.HandlesViewers;
-using Flow.Launcher.Plugin.SnapshotApps.Models;
+using Flow.Launcher.Plugin.AppsSnapshoter.HandlesViewers;
+using Flow.Launcher.Plugin.AppsSnapshoter.Models;
 
-namespace Flow.Launcher.Plugin.SnapshotApps.Services;
+namespace Flow.Launcher.Plugin.AppsSnapshoter.Services;
 
 public class OpenedAppsService
 {

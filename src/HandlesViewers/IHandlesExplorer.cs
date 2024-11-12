@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Flow.Launcher.Plugin.SnapshotApps.HandlesViewers;
+namespace Flow.Launcher.Plugin.AppsSnapshoter.HandlesViewers;
 
 /// <summary>
 /// Interface for exploring handles and extracting paths.
