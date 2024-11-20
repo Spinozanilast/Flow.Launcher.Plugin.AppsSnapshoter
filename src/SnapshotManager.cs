@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 using Flow.Launcher.Plugin.AppsSnapshoter.Models;
 using Flow.Launcher.Plugin.AppsSnapshoter.Services;
 
@@ -46,7 +48,7 @@ public class SnapshotManager
         return snapshots;
     }
 
-    public void OpenAppsSnapshoter(string snapshotName)
+    public async ValueTask OpenAppsSnapshoter(string snapshotName)
     {
         if (!IsSnapshotExists(snapshotName))
         {
@@ -58,13 +60,14 @@ public class SnapshotManager
         {
             UseShellExecute = true
         };
-        foreach (var appModel in snapshot.AppModelsIncluded)
+
+        foreach (var exePath in snapshot.AppModelsIncluded.Select(appModel => appModel.ExecutionFilePath))
         {
-            var exePath = appModel.ExecutionFilePath;
             if (File.Exists(exePath) || Uri.IsWellFormedUriString(exePath, UriKind.RelativeOrAbsolute))
             {
                 startInfo.FileName = exePath;
-                Process.Start(startInfo);
+                Task appRunTask = Task.Run(() => Process.Start(startInfo));
+                await appRunTask;
             }
             else
             {

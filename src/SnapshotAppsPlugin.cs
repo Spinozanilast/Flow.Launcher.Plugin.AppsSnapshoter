@@ -75,11 +75,11 @@ namespace Flow.Launcher.Plugin.AppsSnapshoter
                 .WithTitle("Open Snapshot")
                 .WithSubtitle($"Open {selectedSnapshotName} snapshot")
                 .WithIconPath("ActionsIcons/open-icon.png")
-                .WithFuncReturningBoolAction(c =>
+                .WithFuncReturningBoolActionAsync(async c =>
                 {
                     try
                     {
-                        _snapshotManager.OpenAppsSnapshoter(selectedSnapshotName);
+                        await _snapshotManager.OpenAppsSnapshoter(selectedSnapshotName);
                     }
                     catch (Exception e)
                     {

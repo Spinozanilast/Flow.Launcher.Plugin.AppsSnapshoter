@@ -22,13 +22,13 @@ jobs:
       - run: echo ${{steps.version.outputs.prop}}
       - name: Build Project and Create Zip
         run: |
-          dotnet publish 'Flow.Launcher.Plugin.SnapshotApps.csproj' -r win-x64 -c Release -o "SnapshotApps-${{steps.version.outputs.prop}}"
-          7z a -tzip "SnapshotApps-${{steps.version.outputs.prop}}.zip" "./SnapshotApps-${{steps.version.outputs.prop}}/*"
-          rm -r "SnapshotApps-${{steps.version.outputs.prop}}"
+          dotnet publish 'Flow.Launcher.Plugin.AppsSnapshoter.csproj' -r win-x64 -c Release -o "AppsSnapshoter-${{steps.version.outputs.prop}}"
+          7z a -tzip "AppsSnapshoter-${{steps.version.outputs.prop}}.zip" "./AppsSnapshoter-${{steps.version.outputs.prop}}/*"
+          rm -r "AppsSnapshoter-${{steps.version.outputs.prop}}"
       - name: Publish
         uses: softprops/action-gh-release@v2
         with:
-          files: "SnapshotApps-${{steps.version.outputs.prop}}.zip"
+          files: "AppsSnapshoter-${{steps.version.outputs.prop}}.zip"
           tag_name: "v${{steps.version.outputs.prop}}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
