@@ -75,7 +75,7 @@ namespace Flow.Launcher.Plugin.AppsSnapshoter.Services
             {
                 throw new ArgumentException(
                     "File doesn't exist. Something went wrong!",
-                    nameof(file));
+                    file);
             }
 
             return File.OpenRead(file);

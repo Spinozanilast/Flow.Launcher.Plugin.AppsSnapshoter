@@ -21,6 +21,7 @@ public class SnapshotManager
     {
         _fileService = new FileService(baseDirectory: pluginDirectory, partToCombine: DefaultSnapshotsDirectoryName,
             defaultFileExtension: DefaultSerializedFileExtension);
+
         _snapshotNames = new List<string>(GetSnapshotsNames());
     }
 
@@ -33,6 +34,18 @@ public class SnapshotManager
     {
         return _snapshotNames.Contains(snapshotName);
     }
+
+    public bool IsAppExists(string snapshotName, string appName)
+    {
+        if (!IsSnapshotExists(snapshotName))
+        {
+            return false;
+        }
+
+        var snapshot = GetSnapshot(snapshotName);
+        return snapshot.AppModelsIncluded.Any(app => app.AppModuleName == appName);
+    }
+
 
     public List<Snapshot> GetSnapshots()
     {
@@ -48,7 +61,45 @@ public class SnapshotManager
         return snapshots;
     }
 
-    public async ValueTask OpenAppsSnapshoter(string snapshotName)
+    public void RemoveSnapshotApp(string snapshotName, string appName)
+    {
+        var snapshot = GetSnapshot(snapshotName);
+        var appModelToRemove = snapshot.AppModelsIncluded.Find(m => m.AppModuleName == appName);
+
+        if (appModelToRemove is null) return;
+
+        snapshot.AppModelsIncluded.Remove(appModelToRemove);
+        RecreateSnapshotFile(snapshot);
+    }
+
+    public void EditSnapshotApp(string snapshotName, string appName, AppModel newAppModel)
+    {
+        var snapshot = GetSnapshot(snapshotName);
+        var appModelToEdit = snapshot.AppModelsIncluded.Find(m => m.AppModuleName == appName);
+
+        if (appModelToEdit is null) return;
+
+        snapshot.AppModelsIncluded.Remove(appModelToEdit);
+        snapshot.AppModelsIncluded.Add(newAppModel);
+        RecreateSnapshotFile(snapshot);
+    }
+
+    public void RemoveAppFromAllSnapshotsIfExists(string appName)
+    {
+        foreach (var snapshotName in _snapshotNames)
+        {
+            RemoveSnapshotApp(snapshotName, appName);
+        }
+    }
+
+    public void AddSnapshotApp(string snapshotName, AppModel newAppModel)
+    {
+        var snapshot = GetSnapshot(snapshotName);
+        snapshot.AppModelsIncluded.Add(newAppModel);
+        RecreateSnapshotFile(snapshot);
+    }
+
+    public async ValueTask OpenSnapshotApps(string snapshotName)
     {
         if (!IsSnapshotExists(snapshotName))
         {
@@ -71,7 +122,7 @@ public class SnapshotManager
             }
             else
             {
-                throw new Exception("Execution file of app written if file does not exists.");
+                throw new Exception("Execution file of app written written to snapshot but file does not exists");
             }
         }
     }
@@ -115,13 +166,20 @@ public class SnapshotManager
         _snapshotNames.Add(futureSnapshotName);
     }
 
-    public Snapshot GetSnapshot(string snapshotName)
+    private Snapshot GetSnapshot(string snapshotName)
     {
         var fileStream = OpenExistingFileWithSnapshot(snapshotName);
         return SnapshotBinaryFormatter.DeserializeSnapshot(fileStream);
     }
 
-    public List<AppModel> GetAppsSnapshoter(string snapshotName) => GetSnapshot(snapshotName).AppModelsIncluded;
+    public List<AppModel> GetSnapshotApps(string snapshotName) => GetSnapshot(snapshotName).AppModelsIncluded;
+
+    private void RecreateSnapshotFile(Snapshot snapshot)
+    {
+        DeleteFileWithSnapshot(snapshot.SnapshotName);
+        _snapshotNames.Remove(snapshot.SnapshotName);
+        CreateSnapshot(snapshot);
+    }
 
     private string[] GetSnapshotsNames() => _fileService.GetFileNames();
 

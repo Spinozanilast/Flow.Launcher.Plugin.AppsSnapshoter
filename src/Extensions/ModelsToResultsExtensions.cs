@@ -10,7 +10,7 @@ public static class ModelsToResultsExtensions
     private const bool IsFromList = true;
 
     public static List<Result> ToResults(this List<Snapshot> snapshots,
-        Func<string, bool, string, List<Result>> listResultAction)
+        Func<string, bool, string, List<Result>> snapshotActionsResults)
     {
         return snapshots.Select(snapshot =>
         {
@@ -21,7 +21,7 @@ public static class ModelsToResultsExtensions
                 .WithIconPath(snapshot.IcoPath)
                 .WithFuncReturningBoolAction(_ =>
                 {
-                    listResultAction.Invoke(snapshot.SnapshotName, IsFromList, string.Empty);
+                    snapshotActionsResults.Invoke(snapshot.SnapshotName, IsFromList, string.Empty);
                     return false;
                 });
         }).ToList();
@@ -34,5 +34,18 @@ public static class ModelsToResultsExtensions
             .WithSubtitle(app.ExecutionFilePath)
             .WithIconPath(app.IconPath)).ToList();
     }
-    
+
+    public static List<Result> ToResults(this List<AppModel> apps,
+        Func<string, string, bool, List<Result>> snapshotAppActionsResults, string snapshotName)
+    {
+        return apps.Select(app => new Result()
+            .WithTitle(app.AppModuleName)
+            .WithSubtitle(app.ExecutionFilePath)
+            .WithIconPath(app.IconPath)
+            .WithFuncReturningBoolAction(_ =>
+            {
+                snapshotAppActionsResults.Invoke(app.AppModuleName, snapshotName, IsFromList);
+                return false;
+            })).ToList();
+    }
 }

@@ -15,11 +15,8 @@ namespace Flow.Launcher.Plugin.AppsSnapshoter.Services;
 public class OpenedAppsService
 {
     private const int DefaultModelsCapacity = 5;
-    private const string DefaultIconsDirectoryName = "Icons";
-    private const string DefaultAppIconFileName = "application-default.png";
-    private const string DefaultIconsImagesExtension = ".png";
 
-    #region limitations
+    #region Limitations
 
     private readonly string[] _excludedDirectories =
     {
@@ -31,6 +28,8 @@ public class OpenedAppsService
     private readonly string[] _includedProcesses = { "Video.UI", "explorer" };
 
     #endregion
+
+    private readonly IconService _iconService;
 
     private readonly string _pluginDirectory;
     private readonly string _iconsDirectory;
@@ -50,13 +49,7 @@ public class OpenedAppsService
     {
         _context = context;
         _pluginDirectory = pluginDirectory ?? Directory.GetCurrentDirectory();
-        _iconsDirectory = Path.Combine(_pluginDirectory, DefaultIconsDirectoryName);
-        Path.Combine(_pluginDirectory, DefaultAppIconFileName);
-        if (!Directory.Exists(_iconsDirectory))
-        {
-            Directory.CreateDirectory(_iconsDirectory);
-        }
-
+        _iconService = new IconService(_pluginDirectory);
         _handlesViewer = new HandlesViewer(_pluginDirectory);
     }
 
@@ -67,24 +60,8 @@ public class OpenedAppsService
         foreach (var model in AppModels)
         {
             if (!string.IsNullOrEmpty(model.IconPath)) continue;
-            SetIconToAppModel(model);
+            _iconService.SetIconForApp(model);
         }
-    }
-
-    private void SetIconToAppModel(AppModel model, string executionFilePath = null)
-    {
-        var iconFilePath = Path.Combine(_iconsDirectory, model.AppModuleName) + DefaultIconsImagesExtension;
-
-        if (File.Exists(iconFilePath))
-        {
-            model.IconPath = iconFilePath;
-            return;
-        }
-
-        var icon = Icon.ExtractAssociatedIcon(executionFilePath ?? model.ExecutionFilePath);
-        var bitmapIcon = icon?.ToBitmap();
-        bitmapIcon?.Save(iconFilePath, ImageFormat.Png);
-        model.IconPath = iconFilePath;
     }
 
     private async Task WriteOpenedAppsModels()
@@ -118,13 +95,13 @@ public class OpenedAppsService
         {
             if (path.Length > 0)
             {
-                var model = new AppModel()
+                var model = new AppModel
                 {
                     AppModuleName = moduleName[..^4],
                     ExecutionFilePath = path
                 };
 
-                SetIconToAppModel(model, process.MainModule?.FileName);
+                _iconService.SetIconForApp(model, process.MainModule?.FileName);
                 AppModels.Add(model);
             }
         }

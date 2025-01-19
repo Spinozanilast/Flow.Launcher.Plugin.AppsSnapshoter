@@ -1,10 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Flow.Launcher.Plugin.AppsSnapshoter.Extensions;
 using Flow.Launcher.Plugin.AppsSnapshoter.Models;
 using Flow.Launcher.Plugin.AppsSnapshoter.Services;
+using Microsoft.Win32;
 
 namespace Flow.Launcher.Plugin.AppsSnapshoter
 {
@@ -15,18 +18,25 @@ namespace Flow.Launcher.Plugin.AppsSnapshoter
 
         private PluginInitContext _context;
         private OpenedAppsService _openedAppsService;
+        private IconService _iconService;
+        private FileDialogService _dialogService;
         private SnapshotManager _snapshotManager;
 
         private const string PluginIconPath = "/icon.png";
         private const string SnapshotStandardIconPath = "snapshot.png";
+
         private const string ListSnapshotsKeyword = "list";
-        private const string ListAppsSnapshoterKeyword = "apps";
+        private const string ListSnapshotAppsKeyword = "apps";
+
+        private const int MaxSearchTermsWithAppNameParts = 10;
 
         public Task InitAsync(PluginInitContext context)
         {
             _context = context;
             _pluginKeyWord = _context.CurrentPluginMetadata.ActionKeyword;
             _pluginDirectory = _context.CurrentPluginMetadata.PluginDirectory;
+            _iconService = new IconService(_pluginDirectory);
+            _dialogService = new FileDialogService(_iconService);
             _snapshotManager = new SnapshotManager(_pluginDirectory);
 
             return Task.CompletedTask;
@@ -34,52 +44,78 @@ namespace Flow.Launcher.Plugin.AppsSnapshoter
 
         public async Task<List<Result>> QueryAsync(Query query, CancellationToken cancellationToken)
         {
-            var results = new List<Result>();
-            var queryFirstSearch = query.FirstSearch;
-            var querySecondSearch = query.SecondSearch;
+            var snapshotName = query.FirstSearch;
+            var command = query.SecondSearch;
 
-            if (queryFirstSearch.ToLower() == ListSnapshotsKeyword)
+            if (string.Equals(snapshotName, ListSnapshotsKeyword, StringComparison.OrdinalIgnoreCase))
             {
-                return GetSnaphotsResultsList();
+                return GetSnapshotsResultsList();
             }
 
-            if (_snapshotManager.IsSnapshotExists(queryFirstSearch))
+            return _snapshotManager.IsSnapshotExists(snapshotName)
+                ? HandleExistingSnapshot(query, snapshotName, command)
+                : HandleNonExistingSnapshot(snapshotName, command, cancellationToken);
+        }
+
+        private List<Result> HandleExistingSnapshot(Query query, string snapshotName, string command)
+        {
+            if (!string.Equals(command, ListSnapshotAppsKeyword, StringComparison.OrdinalIgnoreCase))
             {
-                return querySecondSearch.ToLower() == ListAppsSnapshoterKeyword
-                    ? GetAppsSnapshoterResultsList(queryFirstSearch)
-                    : GetSingleSnapshotResults(queryFirstSearch, false, querySecondSearch);
+                return GetSingleSnapshotResults(snapshotName, false, command);
             }
 
-            var createResult = GetCreateSnapshotResult(queryFirstSearch, cancellationToken);
-            var listResult = GetListSnapshotsResult();
-            var removeSnapshotResult = GetRemoveSnapshotResult(queryFirstSearch);
-            var openSnapshotResult = GetOpenSnapshotResult(queryFirstSearch);
-            var renameSnapshotResult = GetRenameSnapshotResult(queryFirstSearch, querySecondSearch);
+            if (query.SearchTerms.Length > MaxSearchTermsWithAppNameParts)
+                return GetSnapshotAppsResultsList(snapshotName);
 
-            results.Add(createResult);
+            var appNameParts = query.SearchTerms.Skip(2).ToList();
+            var fullAppName = string.Join(" ", appNameParts);
 
-            if (_snapshotManager.IsAnySnapshotExists())
+            if (_snapshotManager.IsAppExists(snapshotName, fullAppName))
             {
-                results.Add(openSnapshotResult);
-                results.Add(listResult);
-                results.Add(removeSnapshotResult);
-                results.Add(renameSnapshotResult);
+                return GetSingleAppResults(fullAppName, snapshotName, false);
             }
+
+            return GetSnapshotAppsResultsList(snapshotName);
+        }
+
+        private List<Result> HandleNonExistingSnapshot(string snapshotName, string command,
+            CancellationToken cancellationToken)
+        {
+            var results = new List<Result>
+            {
+                GetCreateSnapshotResult(snapshotName, cancellationToken)
+            };
+
+            if (!_snapshotManager.IsAnySnapshotExists())
+            {
+                return results;
+            }
+
+            results.AddRange(new[]
+            {
+                GetOpenSnapshotResult(snapshotName),
+                GetListSnapshotsResult(),
+                GetRemoveSnapshotResult(snapshotName),
+                GetRenameSnapshotResult(snapshotName, command)
+            });
 
             return results;
         }
+
+
+        #region Snapshot Actions
 
         private Result GetOpenSnapshotResult(string selectedSnapshotName)
         {
             return new Result()
                 .WithTitle("Open Snapshot")
                 .WithSubtitle($"Open {selectedSnapshotName} snapshot")
-                .WithIconPath("ActionsIcons/open-icon.png")
+                .WithIconPath(ActionsIconsPaths.Open)
                 .WithFuncReturningBoolActionAsync(async c =>
                 {
                     try
                     {
-                        await _snapshotManager.OpenAppsSnapshoter(selectedSnapshotName);
+                        await _snapshotManager.OpenSnapshotApps(selectedSnapshotName);
                     }
                     catch (Exception e)
                     {
@@ -90,66 +126,31 @@ namespace Flow.Launcher.Plugin.AppsSnapshoter
                 });
         }
 
+        private Result GetSnapshotAppsListResult(string currentSnapshotName)
+        {
+            return new Result()
+                .WithTitle("List Apps")
+                .WithIconPath(ActionsIconsPaths.List)
+                .WithFuncReturningBoolAction(
+                    _ =>
+                    {
+                        _context.API.ChangeQuery($"{_pluginKeyWord} {currentSnapshotName} {ListSnapshotAppsKeyword}");
+                        return false;
+                    }
+                );
+        }
+
         private Result GetRemoveSnapshotResult(string selectedSnapshotName)
         {
             return new Result()
                 .WithTitle("Remove Snapshot")
                 .WithSubtitle($"Remove {selectedSnapshotName} snapshot")
-                .WithIconPath("ActionsIcons/remove-icon.png")
+                .WithIconPath(ActionsIconsPaths.RemoveSnapshot)
                 .WithFuncReturningBoolAction(
-                    c =>
+                    _ =>
                     {
                         _snapshotManager.RemoveSnapshot(selectedSnapshotName);
                         ResetSearchToActionWord();
-                        return true;
-                    }
-                );
-        }
-
-        private Result GetListSnapshotsResult()
-        {
-            return new Result()
-                .WithTitle("List Snapshots")
-                .WithIconPath("ActionsIcons/list-icon.png")
-                .WithFuncReturningBoolAction(
-                    c =>
-                    {
-                        _context.API.ChangeQuery(_pluginKeyWord + " " + ListSnapshotsKeyword);
-                        return false;
-                    }
-                );
-        }
-
-        private Result GetAppsSnapshoterListResult(string currentSnapshotName)
-        {
-            return new Result()
-                .WithTitle("List Apps")
-                .WithIconPath("ActionsIcons/list-icon.png")
-                .WithFuncReturningBoolAction(
-                    c =>
-                    {
-                        _context.API.ChangeQuery($"{_pluginKeyWord} {currentSnapshotName} {ListAppsSnapshoterKeyword}");
-                        return false;
-                    }
-                );
-        }
-
-        private Result GetCreateSnapshotResult(string queryFirstSearch, CancellationToken cancellationToken)
-        {
-            return new Result()
-                .WithTitle($"Create {queryFirstSearch} Snapshot")
-                .WithSubtitle($"Save locally currently active apps for later for subsequent launch")
-                .WithIconPath(
-                    "ActionsIcons/add-icon.png").WithFuncReturningBoolAction(
-                    c =>
-                    {
-                        if (string.IsNullOrEmpty(queryFirstSearch))
-                        {
-                            return ShowMsg("Snapshot name", "Snapshot name was not written");
-                        }
-
-                        _ = CreateAppsSnapshotAsync(queryFirstSearch, cancellationToken);
-
                         return true;
                     }
                 );
@@ -160,7 +161,7 @@ namespace Flow.Launcher.Plugin.AppsSnapshoter
             return new Result()
                 .WithTitle("Rename Snapshot")
                 .WithSubtitle($"Rename {currentSnapshotName} snapshot to {futureSnapshotName}")
-                .WithIconPath("ActionsIcons/rename-icon.png")
+                .WithIconPath(ActionsIconsPaths.Rename)
                 .WithFuncReturningBoolAction(
                     c =>
                     {
@@ -180,6 +181,113 @@ namespace Flow.Launcher.Plugin.AppsSnapshoter
                         {
                             return ShowMsg("Renaming Snapshot", e.Message);
                         }
+
+                        return true;
+                    }
+                );
+        }
+
+        #endregion
+
+        #region Snapshot App Actions
+
+        private Result GetRemoveAppFromSnapshotResult(string selectedSnapshotName, string appToRemove)
+        {
+            return new Result()
+                .WithTitle("Remove app")
+                .WithSubtitle($"Remove {appToRemove} from {selectedSnapshotName} snapshot")
+                .WithIconPath(ActionsIconsPaths.RemoveApp)
+                .WithFuncReturningBoolAction(c =>
+                {
+                    _snapshotManager.RemoveSnapshotApp(selectedSnapshotName, appToRemove);
+                    RemoveQueryAppName(selectedSnapshotName);
+                    return false;
+                });
+        }
+
+        private Result GetEditAppResult(string currentSnapshotName, string appToEdit)
+        {
+            return new Result()
+                .WithTitle("Replace this app with other from dialog")
+                .WithIconPath(ActionsIconsPaths.Replace)
+                .WithFuncReturningBoolAction(
+                    _ =>
+                    {
+                        var appModel =
+                            _dialogService.WriteAppModelFromFileDialog($"Select new executable for {appToEdit}");
+                        if (appModel is not null)
+                            _snapshotManager.EditSnapshotApp(currentSnapshotName, appToEdit, appModel);
+                        return true;
+                    }
+                );
+        }
+
+        private Result GetAddAppResult(string currentSnapshotName)
+        {
+            return new Result()
+                .WithTitle("Add another app to snapshot")
+                .WithSubtitle($"Add app to {currentSnapshotName}")
+                .WithIconPath(ActionsIconsPaths.AddApp)
+                .WithFuncReturningBoolAction(
+                    _ =>
+                    {
+                        var appModel =
+                            _dialogService.WriteAppModelFromFileDialog(
+                                $"Select new executable to add to {currentSnapshotName} snapshot");
+                        if (appModel is not null)
+                            _snapshotManager.AddSnapshotApp(currentSnapshotName, appModel);
+                        return true;
+                    }
+                );
+        }
+
+        private Result GetBlockDeleteAppResult(string selectedSnapshotName, string appToBlockRemove)
+        {
+            return new Result()
+                .WithTitle("Delete and block app")
+                .WithSubtitle("Remove app from all snapshots and do not add on future snapshots creation")
+                .WithIconPath(ActionsIconsPaths.RemoveAll)
+                .WithFuncReturningBoolAction(
+                    _ =>
+                    {
+                        _snapshotManager.RemoveAppFromAllSnapshotsIfExists(appToBlockRemove);
+                        RemoveQueryAppName(selectedSnapshotName);
+                        return false;
+                    }
+                );
+        }
+
+        #endregion
+
+        private Result GetListSnapshotsResult()
+        {
+            return new Result()
+                .WithTitle("List Snapshots")
+                .WithIconPath(ActionsIconsPaths.List)
+                .WithFuncReturningBoolAction(
+                    _ =>
+                    {
+                        _context.API.ChangeQuery(_pluginKeyWord + " " + ListSnapshotsKeyword);
+                        return false;
+                    }
+                );
+        }
+
+        private Result GetCreateSnapshotResult(string queryFirstSearch, CancellationToken cancellationToken)
+        {
+            return new Result()
+                .WithTitle($"Create {queryFirstSearch} Snapshot")
+                .WithSubtitle("Save locally currently active apps for later for subsequent launch")
+                .WithIconPath(
+                    ActionsIconsPaths.CreateSnapshot).WithFuncReturningBoolAction(
+                    c =>
+                    {
+                        if (string.IsNullOrEmpty(queryFirstSearch))
+                        {
+                            return ShowMsg("Snapshot name", "Snapshot name was not written");
+                        }
+
+                        _ = CreateAppsSnapshotAsync(queryFirstSearch, cancellationToken);
 
                         return true;
                     }
@@ -228,7 +336,26 @@ namespace Flow.Launcher.Plugin.AppsSnapshoter
                 GetRemoveSnapshotResult(selectedSnapshotName),
                 GetOpenSnapshotResult(selectedSnapshotName),
                 GetRenameSnapshotResult(selectedSnapshotName, newSnapshotName),
-                GetAppsSnapshoterListResult(selectedSnapshotName)
+                GetSnapshotAppsListResult(selectedSnapshotName),
+                GetAddAppResult(selectedSnapshotName)
+            };
+
+            return results;
+        }
+
+        private List<Result> GetSingleAppResults(string selectedAppName, string selectedSnapshotName, bool isFromList)
+        {
+            if (isFromList)
+            {
+                _context.API.ChangeQuery(
+                    $"{_pluginKeyWord} {selectedSnapshotName} {ListSnapshotAppsKeyword} {selectedAppName}");
+            }
+
+            var results = new List<Result>
+            {
+                GetRemoveAppFromSnapshotResult(selectedSnapshotName, selectedAppName),
+                GetEditAppResult(selectedSnapshotName, selectedAppName),
+                GetBlockDeleteAppResult(selectedSnapshotName, selectedAppName),
             };
 
             return results;
@@ -253,11 +380,15 @@ namespace Flow.Launcher.Plugin.AppsSnapshoter
             return isClosingAfterMsg;
         }
 
-        private List<Result> GetSnaphotsResultsList() =>
-            _snapshotManager.GetSnapshots().ToResults(listResultAction: GetSingleSnapshotResults);
+        private List<Result> GetSnapshotsResultsList() =>
+            _snapshotManager.GetSnapshots().ToResults(snapshotActionsResults: GetSingleSnapshotResults);
 
-        private List<Result> GetAppsSnapshoterResultsList(string selectedSnapshotName) =>
-            _snapshotManager.GetAppsSnapshoter(selectedSnapshotName).ToResults();
+        private List<Result> GetSnapshotAppsResultsList(string selectedSnapshotName) =>
+            _snapshotManager.GetSnapshotApps(selectedSnapshotName)
+                .ToResults(snapshotAppActionsResults: GetSingleAppResults, selectedSnapshotName);
+
+        private void RemoveQueryAppName(string snapshotName) =>
+            _context.API.ChangeQuery($"{_pluginKeyWord} {snapshotName} {ListSnapshotAppsKeyword}");
 
         private void ResetSearchToActionWord() => _context.API.ChangeQuery(_pluginKeyWord);
 
