@@ -1,0 +1,106 @@
+﻿<UserControl x:Class="Flow.Launcher.Plugin.AppsSnapshoter.ConfigurationSettings.View.SettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:local="clr-namespace:Flow.Launcher.Plugin.AppsSnapshoter.ConfigurationSettings.View"
+             xmlns:ui="http://schemas.modernwpf.com/2019"
+             mc:Ignorable="d"
+             d:DesignHeight="500" d:DesignWidth="600">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ui:ThemeResources />
+                <ui:XamlControlsResources />
+                <ResourceDictionary Source="../Styles.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+    <StackPanel Orientation="Vertical" Margin="20 10 20 10">
+        <!-- Toggle Switch to Allow app duplicates -->
+        <ItemsControl Style="{StaticResource SettingGrid}">
+            <StackPanel Style="{StaticResource IconTextPanel}">
+                <StackPanel Orientation="Horizontal">
+                    <ui:FontIcon Glyph="&#xe72e;" Style="{StaticResource Glyph}"></ui:FontIcon>
+                    <StackPanel Orientation="Vertical">
+                        <TextBlock Style="{StaticResource SettingTitle}" Text="Allow duplicates" />
+                        <TextBlock Style="{StaticResource SettingSubTitle}"
+                                   Text="On checked allow to add app duplicates to snapshot">
+                        </TextBlock>
+                    </StackPanel>
+                </StackPanel>
+            </StackPanel>
+            <ui:ToggleSwitch Style="{StaticResource SettingToggle}" IsOn="{Binding AllowAppDuplicatesExist}"
+                             OffContent="Disallow" OnContent="Allow" />
+        </ItemsControl>
+        <!-- Directories to Exclude -->
+        <StackPanel Margin="0 20 0 0">
+            <TextBlock Style="{StaticResource SettingTitle}" Text="Directories to Exclude" />
+            <TextBlock Style="{StaticResource SettingSubTitle}"
+                       Text="List of directories to exclude from app scanning" />
+            <ListBox ItemsSource="{Binding DirectoriesToExclude}"
+                     Style="{StaticResource CollectionListBox}">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <Grid HorizontalAlignment="Stretch">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="{Binding}" VerticalAlignment="Center" Margin="5,0,0,0" />
+                            <Button Grid.Column="1" Content="Remove" HorizontalAlignment="Right"
+                                    Margin="10 0"
+                                    Command="{Binding RemoveDirectoryCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                    CommandParameter="{Binding}" />
+                        </Grid>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+            <ui:AppBarButton Label="Add Directory" Style="{StaticResource AddButton}"
+                             Command="{Binding AddDirectoryCommand, RelativeSource={RelativeSource AncestorType=UserControl}}">
+                <ui:AppBarButton.Icon>
+                    <ui:FontIcon Glyph="&#xe710;"></ui:FontIcon>
+                </ui:AppBarButton.Icon>
+            </ui:AppBarButton>
+        </StackPanel>
+        <!-- Paths to Swap on Add -->
+        <StackPanel Margin="0 20 0 0">
+            <TextBlock Style="{StaticResource SettingTitle}" Text="Paths to Swap on Add" />
+            <TextBlock Style="{StaticResource SettingSubTitle}"
+                       Text="Define path substitutions when adding apps" />
+            <DataGrid ItemsSource="{Binding PathsToSwapOnAdd}"
+                      AutoGenerateColumns="False"
+                      CanUserAddRows="False"
+                      CanUserDeleteRows="False"
+                      CanUserResizeColumns="False"
+                      CanUserReorderColumns="False"
+                      CanUserResizeRows="False"
+                      CanUserSortColumns="True"
+                      HeadersVisibility="Column"
+                      GridLinesVisibility="All"
+                      BorderThickness="1"
+                      Margin="0 10 0 0">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Old Path" Binding="{Binding OriginalPath}" Width="*" />
+                    <DataGridTextColumn Header="New Path" Binding="{Binding ReplacementPath}" Width="*" />
+                    <DataGridTemplateColumn Header="Actions" Width="Auto">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Button Content="Remove"
+                                        Command="{Binding RemovePathCommand, 
+                                          RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                        CommandParameter="{Binding OriginalPath}" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+            <ui:AppBarButton Label="Add Path Swap" Style="{StaticResource AddButton}"
+                             Command="{Binding AddPathSwapCommand, RelativeSource={RelativeSource AncestorType=UserControl}}">
+                <ui:AppBarButton.Icon>
+                    <ui:FontIcon Glyph="&#xe710;"></ui:FontIcon>
+                </ui:AppBarButton.Icon>
+            </ui:AppBarButton>
+        </StackPanel>
+    </StackPanel>
+</UserControl>
