@@ -86,7 +86,8 @@ public class SnapshotManager
 
     public void RemoveAppFromAllSnapshotsIfExists(string appName)
     {
-        foreach (var snapshotName in _snapshotNames)
+        var snapshotNamesCopy = new List<string>(_snapshotNames);
+        foreach (var snapshotName in snapshotNamesCopy)
         {
             RemoveSnapshotApp(snapshotName, appName);
         }
