@@ -1,22 +1,25 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Controls;
+using Flow.Launcher.Plugin.AppsSnapshoter.ConfigurationSettings;
+using Flow.Launcher.Plugin.AppsSnapshoter.ConfigurationSettings.View;
 using Flow.Launcher.Plugin.AppsSnapshoter.Extensions;
 using Flow.Launcher.Plugin.AppsSnapshoter.Models;
 using Flow.Launcher.Plugin.AppsSnapshoter.Services;
-using Microsoft.Win32;
 
 namespace Flow.Launcher.Plugin.AppsSnapshoter
 {
-    public class AppsSnapshoter : IAsyncPlugin
+    public class AppsSnapshoter : IAsyncPlugin, ISettingProvider
     {
         private string _pluginDirectory;
         private string _pluginKeyWord;
 
         private PluginInitContext _context;
+        private Settings _settings;
+
         private OpenedAppsService _openedAppsService;
         private IconService _iconService;
         private FileDialogService _dialogService;
@@ -33,14 +36,18 @@ namespace Flow.Launcher.Plugin.AppsSnapshoter
         public Task InitAsync(PluginInitContext context)
         {
             _context = context;
+            _settings = context.API.LoadSettingJsonStorage<Settings>();
+
             _pluginKeyWord = _context.CurrentPluginMetadata.ActionKeyword;
             _pluginDirectory = _context.CurrentPluginMetadata.PluginDirectory;
             _iconService = new IconService(_pluginDirectory);
             _dialogService = new FileDialogService(_iconService);
             _snapshotManager = new SnapshotManager(_pluginDirectory);
-
+            
             return Task.CompletedTask;
         }
+
+        public Control CreateSettingPanel() => new SettingsView(_context, _settings);
 
         public async Task<List<Result>> QueryAsync(Query query, CancellationToken cancellationToken)
         {
@@ -250,7 +257,13 @@ namespace Flow.Launcher.Plugin.AppsSnapshoter
                 .WithFuncReturningBoolAction(
                     _ =>
                     {
+                        if (_settings.BlockedApps.Add(appToBlockRemove))
+                        {
+                            _context.API.SaveSettingJsonStorage<Settings>();
+                        }
+                        
                         _snapshotManager.RemoveAppFromAllSnapshotsIfExists(appToBlockRemove);
+
                         RemoveQueryAppName(selectedSnapshotName);
                         return false;
                     }
@@ -363,7 +376,7 @@ namespace Flow.Launcher.Plugin.AppsSnapshoter
 
         private async Task<List<AppModel>> GetCurrentlyOpenAppsAsync(CancellationToken cancellationToken)
         {
-            _openedAppsService = await OpenedAppsService.CreateAsync(_pluginDirectory, _context);
+            _openedAppsService = await OpenedAppsService.CreateAsync(_pluginDirectory, _context, _settings);
             await Task.Run(() => _openedAppsService.WriteAppsIconsToModels(), cancellationToken);
 
             var writedAppsCount = _openedAppsService.AppModels.Count;

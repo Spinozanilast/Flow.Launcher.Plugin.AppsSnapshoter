@@ -7,6 +7,7 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Flow.Launcher.Plugin.AppsSnapshoter.ConfigurationSettings;
 using Flow.Launcher.Plugin.AppsSnapshoter.HandlesViewers;
 using Flow.Launcher.Plugin.AppsSnapshoter.Models;
 
@@ -15,6 +16,8 @@ namespace Flow.Launcher.Plugin.AppsSnapshoter.Services;
 public class OpenedAppsService
 {
     private const int DefaultModelsCapacity = 5;
+
+    private Settings _pluginSettings;
 
     #region Limitations
 
@@ -34,20 +37,22 @@ public class OpenedAppsService
     private readonly string _pluginDirectory;
     private readonly string _iconsDirectory;
 
+
     private readonly HandlesViewer _handlesViewer;
+    private readonly PluginInitContext _context;
 
-    private PluginInitContext _context;
-
-    public static async Task<OpenedAppsService> CreateAsync(string pluginDirectory, PluginInitContext context)
+    public static async Task<OpenedAppsService> CreateAsync(string pluginDirectory, PluginInitContext context,
+        Settings settings)
     {
-        var service = new OpenedAppsService(pluginDirectory, context);
+        var service = new OpenedAppsService(pluginDirectory, context, settings);
         await service.WriteOpenedAppsModels();
         return service;
     }
 
-    private OpenedAppsService(string pluginDirectory, PluginInitContext context)
+    private OpenedAppsService(string pluginDirectory, PluginInitContext context, Settings settings)
     {
         _context = context;
+        _pluginSettings = settings;
         _pluginDirectory = pluginDirectory ?? Directory.GetCurrentDirectory();
         _iconService = new IconService(_pluginDirectory);
         _handlesViewer = new HandlesViewer(_pluginDirectory);
@@ -109,11 +114,33 @@ public class OpenedAppsService
 
     private void AddDefaultPath(Process process, string moduleName)
     {
-        AppModels.Add(new AppModel
+        var executionFilePath = process.MainModule?.FileName;
+
+        if (executionFilePath is null) return;
+
+        foreach (var pathSwap in _pluginSettings.PathsToSwapOnAdd)
         {
-            AppModuleName = moduleName[..^4],
-            ExecutionFilePath = process.MainModule?.FileName
-        });
+            if (pathSwap.OriginalPath.Equals(executionFilePath, StringComparison.OrdinalIgnoreCase))
+            {
+                executionFilePath = pathSwap.ReplacementPath;
+                break;
+            }
+        }
+
+        var appModuleName = moduleName[..^4];
+        var newModel = new AppModel
+        {
+            AppModuleName = appModuleName,
+            ExecutionFilePath = executionFilePath
+        };
+
+        if (!_pluginSettings.BlockedApps.Contains(appModuleName) && (_pluginSettings.AllowAppDuplicatesExist ||
+                                                                     AppModels.All(m =>
+                                                                         m.ExecutionFilePath !=
+                                                                         newModel.ExecutionFilePath)))
+        {
+            AppModels.Add(newModel);
+        }
     }
 
     private bool IsValidProcess(Process process)
@@ -137,7 +164,8 @@ public class OpenedAppsService
 
     private bool IsInExcludedDirectory(string filename)
     {
-        return _excludedDirectories.Any(dir => filename.Contains(dir));
+        return _excludedDirectories.Concat(_pluginSettings.DirectoriesToExclude)
+            .Any(dir => filename.Contains(dir, StringComparison.OrdinalIgnoreCase));
     }
 
     private bool IsInIncludedApps(string processName)

@@ -1,5 +1,4 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
     <PropertyGroup>
         <TargetFramework>net7.0-windows</TargetFramework>
         <PackageId>Flow.Launcher.Plugin.AppsSnapshoter</PackageId>
@@ -7,10 +6,13 @@
         <PackageProjectUrl>https://github.com/spinozanilast/Flow.Launcher.Plugin.AppsSnapshoter</PackageProjectUrl>
         <RepositoryUrl>https://github.com/spinozanilast/Flow.Launcher.Plugin.AppsSnapshoter</RepositoryUrl>
         <PackageTags>flow-launcher flow-plugin</PackageTags>
+        <UseWpf>true</UseWpf>
+        <UseWindowsForms>true</UseWindowsForms>
         <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
         <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <RootNamespace>Flow.Launcher.Plugin.AppsSnapshoter</RootNamespace>
+        <EnableDefaultPageItems>false</EnableDefaultPageItems>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
@@ -30,6 +32,7 @@
 
     <ItemGroup>
         <PackageReference Include="Flow.Launcher.Plugin" Version="4.1.0"/>
+        <PackageReference Include="ModernWpfUI" Version="0.9.6" />
         <PackageReference Include="protobuf-net" Version="3.2.30"/>
         <PackageReference Include="System.Drawing.Common" Version="8.0.8"/>
     </ItemGroup>
@@ -50,6 +53,11 @@
       <None Update="handle.exe">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Page Include="src\ConfigurationSettings\Styles.xaml" />
+      <Page Include="src\ConfigurationSettings\View\SettingsView.xaml" />
     </ItemGroup>
 
 </Project>
