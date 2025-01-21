@@ -41,7 +41,7 @@ public class OpenedAppsService
     private readonly HandlesViewer _handlesViewer;
     private readonly PluginInitContext _context;
 
-    public static async Task<OpenedAppsService> CreateAsync(string pluginDirectory, PluginInitContext context,
+    public static async ValueTask<OpenedAppsService> CreateAsync(string pluginDirectory, PluginInitContext context,
         Settings settings)
     {
         var service = new OpenedAppsService(pluginDirectory, context, settings);
@@ -71,12 +71,8 @@ public class OpenedAppsService
 
     private async Task WriteOpenedAppsModels()
     {
-        var processes = Process.GetProcesses();
-        foreach (var process in processes)
+        foreach (var process in GetValidProcesses())
         {
-            if (!IsValidProcess(process))
-                continue;
-
             var mainModule = process.MainModule;
             var moduleName = mainModule?.ModuleName;
             var windowText = process.MainWindowTitle;
@@ -90,6 +86,11 @@ public class OpenedAppsService
                 AddDefaultPath(process, moduleName);
             }
         }
+    }
+
+    private IEnumerable<Process> GetValidProcesses()
+    {
+        return Process.GetProcesses().Where(IsValidProcess);
     }
 
     private async Task AddHandlesExplorerPaths(Process process, IHandlesExplorer handlesExplorer, string moduleName,

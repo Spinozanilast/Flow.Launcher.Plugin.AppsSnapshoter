@@ -42,8 +42,8 @@ namespace Flow.Launcher.Plugin.AppsSnapshoter
             _pluginDirectory = _context.CurrentPluginMetadata.PluginDirectory;
             _iconService = new IconService(_pluginDirectory);
             _dialogService = new FileDialogService(_iconService);
-            _snapshotManager = new SnapshotManager(_pluginDirectory);
-            
+            _snapshotManager = new SnapshotManager(_pluginDirectory, SnapshotStandardIconPath);
+
             return Task.CompletedTask;
         }
 
@@ -261,7 +261,7 @@ namespace Flow.Launcher.Plugin.AppsSnapshoter
                         {
                             _context.API.SaveSettingJsonStorage<Settings>();
                         }
-                        
+
                         _snapshotManager.RemoveAppFromAllSnapshotsIfExists(appToBlockRemove);
 
                         RemoveQueryAppName(selectedSnapshotName);
@@ -319,7 +319,7 @@ namespace Flow.Launcher.Plugin.AppsSnapshoter
                     return;
                 }
 
-                var snapshotIcon = openedApps[0].IconPath ?? SnapshotStandardIconPath;
+                var snapshotIcon = openedApps[0].IconPath;
                 var snapshot = new Snapshot
                 {
                     SnapshotName = snapshotName,
@@ -398,7 +398,8 @@ namespace Flow.Launcher.Plugin.AppsSnapshoter
 
         private List<Result> GetSnapshotAppsResultsList(string selectedSnapshotName) =>
             _snapshotManager.GetSnapshotApps(selectedSnapshotName)
-                .ToResults(snapshotAppActionsResults: GetSingleAppResults, selectedSnapshotName);
+                .ToResults(snapshotAppActionsResults: GetSingleAppResults, selectedSnapshotName,
+                    ActionsIconsPaths.Empty);
 
         private void RemoveQueryAppName(string snapshotName) =>
             _context.API.ChangeQuery($"{_pluginKeyWord} {snapshotName} {ListSnapshotAppsKeyword}");

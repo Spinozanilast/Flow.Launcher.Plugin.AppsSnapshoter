@@ -17,11 +17,13 @@ public class SnapshotManager
     private readonly List<string> _snapshotNames;
     private readonly FileService _fileService;
 
-    public SnapshotManager(string pluginDirectory)
+    private readonly string _defaultSnapshotIconPath;
+
+    public SnapshotManager(string pluginDirectory, string snapshotIconPath)
     {
         _fileService = new FileService(baseDirectory: pluginDirectory, partToCombine: DefaultSnapshotsDirectoryName,
             defaultFileExtension: DefaultSerializedFileExtension);
-
+        _defaultSnapshotIconPath = snapshotIconPath;
         _snapshotNames = new List<string>(GetSnapshotsNames());
     }
 
@@ -43,7 +45,7 @@ public class SnapshotManager
         }
 
         var snapshot = GetSnapshot(snapshotName);
-        return snapshot.AppModelsIncluded.Any(app => app.AppModuleName == appName);
+        return snapshot.AppModelsIncluded is not null && snapshot.AppModelsIncluded.Any(app => app.AppModuleName == appName);
     }
 
 
@@ -68,7 +70,14 @@ public class SnapshotManager
 
         if (appModelToRemove is null) return;
 
+
         snapshot.AppModelsIncluded.Remove(appModelToRemove);
+        if (appModelToRemove.IconPath.Equals(snapshot.IcoPath,
+                StringComparison.InvariantCultureIgnoreCase))
+        {
+            ResetSnapshotIcon(snapshot);
+        }
+
         RecreateSnapshotFile(snapshot);
     }
 
@@ -165,6 +174,19 @@ public class SnapshotManager
 
         _snapshotNames.Remove(currentSnapshotName);
         _snapshotNames.Add(futureSnapshotName);
+    }
+
+    private void ResetSnapshotIcon(Snapshot snapshot)
+    {
+        if (snapshot.AppModelsIncluded.Count == 0)
+        {
+            snapshot.IcoPath = _defaultSnapshotIconPath;
+            return;
+        }
+
+        snapshot.IcoPath = snapshot.AppModelsIncluded.Count > 0
+            ? snapshot.AppModelsIncluded[0].IconPath
+            : _defaultSnapshotIconPath;
     }
 
     private Snapshot GetSnapshot(string snapshotName)

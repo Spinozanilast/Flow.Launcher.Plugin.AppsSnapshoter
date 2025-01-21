@@ -16,4 +16,5 @@ public static class ActionsIconsPaths
     public static readonly string RemoveSnapshot = $"{ActionsFolderPath}/remove-snapshot.png";
     public static readonly string Rename = $"{ActionsFolderPath}/rename.png";
     public static readonly string Replace = $"{ActionsFolderPath}/replace.png";
+    public static readonly string Empty = $"{ActionsFolderPath}/empty.png";
 }
