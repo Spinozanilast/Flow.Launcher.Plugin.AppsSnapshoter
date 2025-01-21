@@ -4,7 +4,7 @@
     "Name": "AppsSnapshoter",
     "Description": "Snapshot opened apps with help of plugin for Flow-Launcher",
     "Author": "spinozanilast",
-    "Version": "1.2.0",
+    "Version": "1.2.1",
     "Language": "csharp",
     "Website": "https://github.com/spinozanilast/Flow.Launcher.Plugin.AppsSnapshoter",
     "IcoPath": "icon.png",

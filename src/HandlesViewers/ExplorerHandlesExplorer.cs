@@ -6,7 +6,7 @@ namespace Flow.Launcher.Plugin.AppsSnapshoter.HandlesViewers;
 
 public class ExplorerHandlesExplorer : IHandlesExplorer
 {
-    private const string ExplorerFullFileName = "C:\\WINDOWS\\Explorer.EXE";
+    private const string ExplorerFullFileName = @"C:\WINDOWS\Explorer.EXE";
 
     public List<string> GetPathsByHandles(HashSet<string> pathsFromHandles,
         string windowText = "")

@@ -14,11 +14,18 @@ public static class ModelsToResultsExtensions
     {
         return snapshots.Select(snapshot =>
         {
-            var apps = string.Join(", ", snapshot.AppModelsIncluded.Select(model => model.AppModuleName).ToList());
-            return new Result()
+            var baseSnapshotResult = new Result()
                 .WithTitle(snapshot.SnapshotName)
+                .WithIconPath(snapshot.IcoPath);
+
+            if (snapshot.AppModelsIncluded is null || snapshot.AppModelsIncluded.Count == 0)
+            {
+                return baseSnapshotResult.WithSubtitle("Empty Snapshot");
+            }
+
+            var apps = string.Join(", ", snapshot.AppModelsIncluded.Select(model => model.AppModuleName).ToList());
+            return baseSnapshotResult
                 .WithSubtitle(apps)
-                .WithIconPath(snapshot.IcoPath)
                 .WithFuncReturningBoolAction(_ =>
                 {
                     snapshotActionsResults.Invoke(snapshot.SnapshotName, IsFromList, string.Empty);
@@ -36,8 +43,19 @@ public static class ModelsToResultsExtensions
     }
 
     public static List<Result> ToResults(this List<AppModel> apps,
-        Func<string, string, bool, List<Result>> snapshotAppActionsResults, string snapshotName)
+        Func<string, string, bool, List<Result>> snapshotAppActionsResults, string snapshotName, string emptyIcoPath)
     {
+        if (apps is null || apps.Count == 0)
+        {
+            return new List<Result>
+            {
+                new Result()
+                    .WithTitle("There are no apps to operate on")
+                    .WithSubtitle("Add apps to list")
+                    .WithIconPath(emptyIcoPath)
+            }; 
+        }
+
         return apps.Select(app => new Result()
             .WithTitle(app.AppModuleName)
             .WithSubtitle(app.ExecutionFilePath)
