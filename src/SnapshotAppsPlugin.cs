@@ -176,9 +176,7 @@ namespace Flow.Launcher.Plugin.AppsSnapshoter
                         {
                             return ShowMsg("There is no current snapshot  name or future snapshot name", string.Empty);
                         }
-
-                        _context.API.ChangeQuery($"{_pluginKeyWord} {currentSnapshotName} to {futureSnapshotName}");
-
+                        
                         try
                         {
                             _snapshotManager.RenameSnapshot(currentSnapshotName, futureSnapshotName);

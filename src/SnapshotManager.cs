@@ -45,7 +45,8 @@ public class SnapshotManager
         }
 
         var snapshot = GetSnapshot(snapshotName);
-        return snapshot.AppModelsIncluded is not null && snapshot.AppModelsIncluded.Any(app => app.AppModuleName == appName);
+        return snapshot.AppModelsIncluded is not null &&
+               snapshot.AppModelsIncluded.Any(app => app.AppModuleName == appName);
     }
 
 
@@ -113,7 +114,7 @@ public class SnapshotManager
     {
         if (!IsSnapshotExists(snapshotName))
         {
-            throw new NullReferenceException("There is no such snapshot to open apps.");
+            throw new NullReferenceException("There is no such snapshot to open apps or snapshot is empty");
         }
 
         var snapshot = GetSnapshot(snapshotName);
@@ -167,13 +168,17 @@ public class SnapshotManager
             throw new Exception("The snapshot with new snapshot name is exists");
         }
 
+        if (_snapshotNames.Contains(futureSnapshotName))
+        {
+            throw new Exception($"Snapshot with same name ({futureSnapshotName}) already exists");
+        }
+
         var snapshot = GetSnapshot(currentSnapshotName);
         snapshot.SnapshotName = futureSnapshotName;
         DeleteFileWithSnapshot(currentSnapshotName);
         CreateSnapshot(snapshot);
 
         _snapshotNames.Remove(currentSnapshotName);
-        _snapshotNames.Add(futureSnapshotName);
     }
 
     private void ResetSnapshotIcon(Snapshot snapshot)
@@ -201,7 +206,10 @@ public class SnapshotManager
     {
         DeleteFileWithSnapshot(snapshot.SnapshotName);
         _snapshotNames.Remove(snapshot.SnapshotName);
-        CreateSnapshot(snapshot);
+        if (snapshot.AppModelsIncluded is not null)
+        {
+            CreateSnapshot(snapshot);
+        }
     }
 
     private string[] GetSnapshotsNames() => _fileService.GetFileNames();

@@ -3,7 +3,6 @@ Flow.Launcher.Plugin.AppsSnasphoter
 
 ## About
 
-
 <div align="center">
 
 [![Publish Release](https://github.com/Spinozanilast/Flow.Launcher.Plugin.AppsSnapshoter/actions/workflows/publish.yml/badge.svg)](https://github.com/Spinozanilast/Flow.Launcher.Plugin.AppsSnapshoter/actions/workflows/publish.yml)
@@ -18,7 +17,11 @@ applications. Applications that go into suspended state are not launched (
 see [UWP](https://learn.microsoft.com/en-us/windows/uwp/get-started/universal-application-platform-guide) applications),
 i.e. many standard Microsoft applications.
 
-https://github.com/user-attachments/assets/89a390a5-b815-499a-9584-9bbc3bd0e42c
+<div align="center">
+
+![Preview](https://github.com/Spinozanilast/Flow.Launcher.Plugin.AppsSnapshoter/raw/master/preview.gif)
+
+</div>
 
 ## Usage
 

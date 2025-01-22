@@ -23,6 +23,7 @@ jobs:
       - name: Build Project and Create Zip
         run: |
           dotnet publish 'Flow.Launcher.Plugin.AppsSnapshoter.csproj' -r win-x64 -c Release -o "AppsSnapshoter-${{steps.version.outputs.prop}}"
+          .\Fetch-HandleExecutable.ps1 -OutputPath "AppsSnapshoter-${{steps.version.outputs.prop}}"
           7z a -tzip "AppsSnapshoter-${{steps.version.outputs.prop}}.zip" "./AppsSnapshoter-${{steps.version.outputs.prop}}/*"
           rm -r "AppsSnapshoter-${{steps.version.outputs.prop}}"
       - name: Publish

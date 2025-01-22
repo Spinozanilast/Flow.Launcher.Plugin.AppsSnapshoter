@@ -16,7 +16,13 @@ public static class ModelsToResultsExtensions
         {
             var baseSnapshotResult = new Result()
                 .WithTitle(snapshot.SnapshotName)
-                .WithIconPath(snapshot.IcoPath);
+                .WithIconPath(snapshot.IcoPath)
+                .WithFuncReturningBoolAction(_ =>
+                {
+                    snapshotActionsResults.Invoke(snapshot.SnapshotName, IsFromList, string.Empty);
+                    return false;
+                });
+
 
             if (snapshot.AppModelsIncluded is null || snapshot.AppModelsIncluded.Count == 0)
             {
@@ -53,7 +59,7 @@ public static class ModelsToResultsExtensions
                     .WithTitle("There are no apps to operate on")
                     .WithSubtitle("Add apps to list")
                     .WithIconPath(emptyIcoPath)
-            }; 
+            };
         }
 
         return apps.Select(app => new Result()
