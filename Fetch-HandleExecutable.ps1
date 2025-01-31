@@ -1,4 +1,4 @@
-param ([string]$OutputPath = $( throw "-username is required." ), [string]$FetchSource = "https://download.sysinternals.com/files/Handle.zip", [string]$Filename = "handle.exe")
+param ([string]$OutputPath = $( throw "-outpath is required." ), [string]$FetchSource = "https://download.sysinternals.com/files/Handle.zip", [string]$Filename = "handle.exe")
 
 $HandleZipPath = "Handle.zip"
 $HandleDestinationPath = "Handle"

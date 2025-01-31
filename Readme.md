@@ -25,67 +25,30 @@ i.e. many standard Microsoft applications.
 
 ## Usage
 
-### The plugin is called on "sa" keyword by default.
+```The plugin is called on "sa" keyword by default. ```
 
-### List existing Snapshots
+### Snapshot Commands
 
-* Select list result
+| Command Meaning                                    | Command                                              | Description                                                                                                       |
+|----------------------------------------------------|------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------|
+| List Snapshots                                     | ```sa list```                                        | List currently existing snapshots, if they are exists                                                             |
+| Create/Open/Remove snapshot or add app to snapshot | ```sa {Snapshot Name}```                             | Create/Open/Remove selected from list (or written) snapshot by selecting specific action from drop down-down list |
+| Rename snapshot                                    | ```sa {Current Snapshot Name} {New Snapshot Name}``` | Rename Snapshot with _Current Snapshot Name_ to _New Snapshot Name_                                               |
+| List snapshot apps                                 | ```sa {Snapshot Name} apps```                        | Listing apps included in snapshot with _Snapshot Name_                                                            |
 
-| Command       | Description                                           |
-|---------------|-------------------------------------------------------|
-| ```sa list``` | List currently existing snapshots, if they are exists |
+### Apps Commands
 
-* Or select **List Snapshots** option to do the same
+Command is the same for all actions ```sa {Snapshot Name} {App Name}``` (you just need to select from app from app list
+or write his name)
 
-----------------------
-
-### Snapshots Creating
-
-| Command                  | Description                                                                                            |
-|--------------------------|--------------------------------------------------------------------------------------------------------|
-| ```sa {Snapshot Name}``` | Create Snapshot with currently opened apps with _snapshot name_ with choosing **Create Result** option |
-
-----------------------
-
-### Open Snapshot
-
-| Command                  | Description                                                           |
-|--------------------------|-----------------------------------------------------------------------|
-| ```sa {Snapshot Name}``` | Open Snapshot apps with _snapshot name_ with choosing **Open** option |
-
-* Select Open result with written _Snapshot name_
-* Select Open result on Snapshot from List Result
-
-----------------------
-
-### Remove Snapshot
-
-| Command                  | Description                                                          |
-|--------------------------|----------------------------------------------------------------------|
-| ```sa {Snapshot Name}``` | Remove Snapshot with _snapshot name_ with choosing **Remove** option |
-
-* Select Remove result with written _Snapshot name_
-* Select Remove result on Snapshot from List Result
-
-----------------------
-
-### Rename Snapshot
-
-| Command                                              | Description                                                         |
-|------------------------------------------------------|---------------------------------------------------------------------|
-| ```sa {Current Snapshot Name} {New Snapshot Name}``` | Rename Snapshot with _Current Snapshot Name_ to _New Snapshot Name_ |
-
-* Select Rename result with written Snapshot name and also _New name_
-* Select Rename result on Snapshot from List Result and write new _Snapshot name_
-
-----------------------
-
-### Listing Snapshot Apps
-
-| Command                       | Description                                            |
-|-------------------------------|--------------------------------------------------------|
-| ```sa {Snapshot Name} apps``` | Listing apps included in snapshot with _Snapshot Name_ |
+| Command Meaning        | Description                                                                |
+|------------------------|----------------------------------------------------------------------------|
+| Remove app             | Remove selected app from _Snapshot Name_ snapshot                          |
+| Block and delete app   | Remove selected app from all snapshots and block future additions          |
+| Replace app with other | Remove selected app and create new from executable selected in file dialog |
 
 ## TO DO
 
-* Individual app settings flow _(same operations as for snapshots(renaming, adding, deleting, changing executable path)_
+- [ ] Add blocked apps view on settings
+- [ ] Add localization
+ 
